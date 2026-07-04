@@ -51,6 +51,8 @@
       ],
       "id": "943dec5c-b952-4a1b-89e2-83388a3ddcac",
       "name": "Search rows",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
       "credentials": {
         "nocoDbApiToken": {
           "id": "C3EuYH9AObHYPqw5",
@@ -91,10 +93,10 @@
             "profile": "null",
             "website": "null",
             "keyProducts": "null",
-            "status": "null",
             "lastRefresh": "null",
             "competitors": "null",
-            "tags": "null"
+            "tags": "null",
+            "errors": "null"
           },
           "matchingColumns": [],
           "schema": [
@@ -144,8 +146,8 @@
               "removed": false
             },
             {
-              "id": "status",
-              "displayName": "status",
+              "id": "errors",
+              "displayName": "errors",
               "type": "string",
               "display": true,
               "defaultMatch": false,
@@ -178,6 +180,15 @@
               "defaultMatch": false,
               "readOnly": false,
               "removed": false
+            },
+            {
+              "id": "companySize",
+              "displayName": "companySize",
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "readOnly": false,
+              "removed": true
             }
           ],
           "attemptToConvertTypes": false,
@@ -192,12 +203,16 @@
       ],
       "id": "5000b7d5-1879-4bc6-ad54-4b9f5fe676d5",
       "name": "Update a row",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "maxTries": 3,
       "credentials": {
         "nocoDbApiToken": {
           "id": "C3EuYH9AObHYPqw5",
           "name": "NocoDB Token account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -235,6 +250,8 @@
       ],
       "id": "4d48697f-0fd5-4305-8c01-70907dda2bba",
       "name": "Search rows2",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
       "credentials": {
         "nocoDbApiToken": {
           "id": "C3EuYH9AObHYPqw5",
@@ -333,8 +350,8 @@
               "removed": true
             },
             {
-              "id": "NERetryCount",
-              "displayName": "NERetryCount",
+              "id": "NERetryCounter",
+              "displayName": "NERetryCounter",
               "type": "number",
               "display": true,
               "defaultMatch": false,
@@ -372,12 +389,15 @@
       ],
       "id": "52a0a74c-4560-4c18-9626-7591765a4824",
       "name": "Update a row2",
+      "retryOnFail": true,
+      "waitBetweenTries": 300,
       "credentials": {
         "nocoDbApiToken": {
           "id": "C3EuYH9AObHYPqw5",
           "name": "NocoDB Token account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -388,18 +408,21 @@
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
-        1488,
+        1664,
         160
       ],
       "id": "dcd97819-cafc-4e54-8c7c-dbcc054ca18e",
       "name": "Discord2",
       "webhookId": "93efef84-4594-4fb4-a9cf-8a937b165093",
+      "retryOnFail": true,
+      "waitBetweenTries": 300,
       "credentials": {
         "discordWebhookApi": {
           "id": "QJ2EFo8lbaHb5abA",
           "name": "Discord Webhook account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -465,6 +488,19 @@
       ],
       "id": "4f8ce68b-4753-4e53-beb6-55aeebfc8d55",
       "name": "sginal2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ \"signal\": \"trigger\" }]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        160
+      ],
+      "id": "02960ab8-f3f4-462c-bb1a-d41853c52966",
+      "name": "sginal3"
     }
   ],
   "pinData": {},
@@ -535,7 +571,7 @@
       "main": [
         [
           {
-            "node": "Discord2",
+            "node": "sginal3",
             "type": "main",
             "index": 0
           }
@@ -592,6 +628,17 @@
           }
         ]
       ]
+    },
+    "sginal3": {
+      "main": [
+        [
+          {
+            "node": "Discord2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -600,7 +647,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "867f7f0b-144b-48c6-89a6-2354d704277f",
+  "versionId": "9a79036c-2a7a-4f59-98ca-f7b772122b67",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "874a53071ff3a00f0c61ef646f6b22fc209bc14b7a8783a508106cc2e7a274f7"

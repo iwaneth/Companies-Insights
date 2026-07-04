@@ -75,7 +75,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const rawText = $json.output;\n\nif (!rawText || rawText.trim() === \"\") {\n  return { json: buildErrorResult() };\n}\n\nlet aiData;\ntry {\n  let jsonData = JSON.parse(rawText);\n  if (Array.isArray(jsonData)) {\n    aiData = jsonData[0];\n    if (aiData.output) {\n      aiData = JSON.parse(aiData.output);\n    }\n  } else if (jsonData.output) {\n    aiData = JSON.parse(jsonData.output);\n  } else {\n    aiData = jsonData;\n  }\n} \ncatch (err) {\n  return { json: buildErrorResult(err.message) };\n}\n\nlet companyData = buildBaseResult(aiData);\nlet { errors, status } = validateCompanyData(companyData);\n\nlet result = buildResult(companyData, errors, status);\n\nreturn {\n  json: result\n};\n\nfunction buildErrorResult(errorMessage) {\n  return {\n    shortSummary: 'Error parsing data',\n    detailedSummary: 'Error parsing data',\n    lastUpdate: new Date().toISOString(),\n    pubDate: 'Unknown',\n    revenue: 'Error parsing data',\n    errorMessage: errorMessage,\n    isValid: \"invalidData\",\n    errors: [\"ERROR PARSING DATA\"]\n  };\n}\n\nfunction buildBaseResult(aiData) {\n  return {\n    shortSummary: aiData.shortSummary || 'Unknown',\n    detailedSummary: aiData.detailedSummary || 'Unknown',\n    pubDate: aiData.pubDate || 'Unknown',\n    revenue: aiData.revenue || 'Unknown',\n    lastUpdate: new Date().toISOString() \n  }\n}\n\nfunction buildResult(companyData, errors, status) {\n  return {\n    ...companyData,\n    errors: errors,\n    isValid: status\n  }\n}\n\nfunction validateCompanyData(companyData) {\n  let errors = [];\n  let status;\n\n  if (companyData.shortSummary === \"Unknown\") errors.push('INVALID shortSummary');\n  if (companyData.detailedSummary === \"Unknown\") errors.push('INVALID detailedSummary');\n  if (companyData.pubDate === 'Unknown') errors.push('INVALID pubDate');\n  if (companyData.revenue === \"Unknown\") errors.push('INVALID revenue')\n  if (\n    companyData.shortSummary === \"Unknown\" ||\n    companyData.detailedSummary === \"Unknown\"\n  ) {\n    status = \"invalidData\"\n  } else {\n    status = \"validData\";\n  }\n\n  return { errors, status };\n}"
+        "jsCode": "const rawText = $json.output;\n\nif (!rawText || rawText.trim() === \"\") {\n  return { json: buildErrorResult() };\n}\n\nlet aiData;\ntry {\n  let jsonData = JSON.parse(rawText);\n  if (Array.isArray(jsonData)) {\n    aiData = jsonData[0];\n    if (aiData.output) {\n      aiData = JSON.parse(aiData.output);\n    }\n  } else if (jsonData.output) {\n    aiData = JSON.parse(jsonData.output);\n  } else {\n    aiData = jsonData;\n  }\n} \ncatch (err) {\n  return { json: buildErrorResult(err.message) };\n}\n\nlet companyData = buildBaseResult(aiData);\nlet { errors, status } = validateCompanyData(companyData);\n\nlet result = buildResult(companyData, errors, status);\n\nreturn {\n  json: result\n};\n\nfunction buildErrorResult(errorMessage) {\n  return {\n    shortSummary: 'Error parsing data',\n    detailedSummary: 'Error parsing data',\n    lastUpdate: new Date().toISOString(),\n    pubDate: 'Error parsing data',\n    revenue: 'Error parsing data',\n    errorMessage: errorMessage,\n    isValid: \"invalidData\",\n    errors: [\"ERROR PARSING DATA\"]\n  };\n}\n\nfunction buildBaseResult(aiData) {\n  return {\n    shortSummary: aiData.shortSummary || 'Unknown',\n    detailedSummary: aiData.detailedSummary || 'Unknown',\n    pubDate: aiData.pubDate || 'Unknown',\n    revenue: aiData.revenue || 'Unknown',\n    lastUpdate: new Date().toISOString() \n  }\n}\n\nfunction buildResult(companyData, errors, status) {\n  return {\n    ...companyData,\n    errors: errors,\n    isValid: status\n  }\n}\n\nfunction validateCompanyData(companyData) {\n  let errors = [];\n  let status;\n\n  if (companyData.shortSummary === \"Unknown\") errors.push('INVALID shortSummary');\n  if (companyData.detailedSummary === \"Unknown\") errors.push('INVALID detailedSummary');\n  if (companyData.pubDate === 'Unknown') errors.push('INVALID pubDate');\n  if (companyData.revenue === \"Unknown\") errors.push('INVALID revenue')\n  if (\n    companyData.shortSummary === \"Unknown\" ||\n    companyData.detailedSummary === \"Unknown\"\n  ) {\n    status = \"invalidData\"\n  } else {\n    status = \"validData\";\n  }\n\n  return { errors, status };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -95,7 +95,7 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict",
+            "typeValidation": "loose",
             "version": 3
           },
           "conditions": [
@@ -122,6 +122,7 @@
           ],
           "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
       "type": "n8n-nodes-base.if",
@@ -225,7 +226,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        736,
+        752,
         1488
       ],
       "id": "7558b67e-acaf-44e3-b7cb-b7b9fc59679b",
@@ -279,7 +280,7 @@
     },
     {
       "parameters": {
-        "url": "=https://news.google.com/rss/search?q={{ $json[\"Company Name\"] }}+company&hl=en-US&gl=UK",
+        "url": "=https://news.google.com/rss/search?q={{ $json.fields.companyName }}+company&hl=en-US&gl=UK",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -428,7 +429,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Analyze the following news articles about a company:\n\nCompany: {{ $('loopOverItems').item.json[\"Company Name\"] }}\nTitle: {{ $json.data }} [\\nTitle]\nDescription: {{ $json.data }} [\\nDescription]\nDate: {{ $json.data }} [\\nDate]\n\nBased ONLY on the text above, generate a raw JSON object (NO markdown, NO backticks, NO explanations) with the following exact keys and structure:\n\n{\n  \"shortSummary\": \"A concise 2-sentence summary of the news.\",\n  \"detailedSummary\": \"A comprehensive overview of the event, implications, and context.\",\n  \"revenue\": \"The anual company porfits (if not provided use your internal knowledge)\"\n  \"pubDate\": \"The publication date {{ $json.data.match('\\nDate') }}.\"\n}\n\nConstraint Checklist:\n1. Output MUST be valid JSON.\n2. Do NOT include ```json or ``` markers.\n3. Do NOT include any text outside the JSON object.\n4. Keys must be exactly as listed above (camelCase).",
+        "text": "=Analyze the following news articles about a company:\n\nCompany: {{ $('loopOverItems').item.json.fields.companyName }}\nTitle: {{ $json.data }} [\\nTitle]\nDescription: {{ $json.data }} [\\nDescription]\nDate: {{ $json.data }} [\\nDate]\n\nBased ONLY on the text above, generate a raw JSON object (NO markdown, NO backticks, NO explanations) with the following exact keys and structure:\n\n{\n  \"shortSummary\": \"A concise 2-sentence summary of the news.\",\n  \"detailedSummary\": \"A comprehensive overview of the event, implications, and context.\",\n  \"revenue\": \"The anual company porfits (if not provided use your internal knowledge)\"\n  \"pubDate\": \"The publication date {{ $json.data.match('\\nDate') }}.\"\n}\n\nConstraint Checklist:\n1. Output MUST be valid JSON.\n2. Do NOT include ```json or ``` markers.\n3. Do NOT include any text outside the JSON object.\n4. Keys must be exactly as listed above (camelCase).\n5. Any key that has no provided info and you have nothing about it in your internal knowledge SET IT TO Uknown AND NO OTHER STRINGS.\n6. Ecpecially for revenue, DO NOT INCLUDE ANY TEXTS EXCEPT THE actual revenue NUMBER AND THE LETTER LIKE K or M or B.",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -444,7 +445,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Analyze the following news articles about a company:\n\nCompany: {{ $('loopOverItems').item.json[\"Company Name\"] }}\nTitle: {{ $json.data }} [\\nTitle]\nDescription: {{ $json.data }} [\\nDescription]\nDate: {{ $json.data }} [\\nDate]\n\nBased ONLY on the text above, generate a raw JSON object (NO markdown, NO backticks, NO explanations) with the following exact keys and structure:\n\n{\n  \"shortSummary\": \"A concise 2-sentence summary of the news.\",\n  \"detailedSummary\": \"A comprehensive overview of the event, implications, and context.\",\n  \"revenue\": \"The anual company porfits (if not provided use your internal knowledge)\"\n  \"pubDate\": \"The publication date {{ $json.data.match('\\nDate') }}.\"\n}\n\nConstraint Checklist:\n1. Output MUST be valid JSON.\n2. Do NOT include ```json or ``` markers.\n3. Do NOT include any text outside the JSON object.\n4. Keys must be exactly as listed above (camelCase).",
+        "text": "=Analyze the following news articles about a company:\n\nCompany: {{ $('loopOverItems').item.json.fields.companyName }}\nTitle: {{ $('checksIfFilteredDataAreValid').item.json.data }} [\\nTitle]\nDescription: {{ $('checksIfFilteredDataAreValid').item.json.data }} [\\nDescription]\nDate: {{ $('checksIfFilteredDataAreValid').item.json.data }} [\\nDate]\n\nBased ONLY on the text above, generate a raw JSON object (NO markdown, NO backticks, NO explanations) with the following exact keys and structure:\n\n{\n  \"shortSummary\": \"A concise 2-sentence summary of the news.\",\n  \"detailedSummary\": \"A comprehensive overview of the event, implications, and context.\",\n  \"revenue\": \"The anual company porfits (if not provided use your internal knowledge)\"\n  \"pubDate\": \"The publication date {{ $json.data.match('\\nDate') }}.\"\n}\n\nConstraint Checklist:\n1. Output MUST be valid JSON.\n2. Do NOT include ```json or ``` markers.\n3. Do NOT include any text outside the JSON object.\n4. Keys must be exactly as listed above (camelCase).\n5. Any key that has no provided info and you have nothing about it in your internal knowledge SET IT TO Uknown AND NO OTHER STRINGS.\n6. Ecpecially for revenue, DO NOT INCLUDE ANY TEXTS EXCEPT THE actual revenue NUMBER AND THE LETTER LIKE K or M or B.",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -460,7 +461,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Analyze the following news articles about a company:\n\nCompany: {{ $('loopOverItems').item.json[\"Company Name\"] }}\nTitle: {{ $json.data }} [\\nTitle]\nDescription: {{ $json.data }} [\\nDescription]\nDate: {{ $json.data }} [\\nDate]\n\nBased ONLY on the text above, generate a raw JSON object (NO markdown, NO backticks, NO explanations) with the following exact keys and structure:\n\n{\n  \"shortSummary\": \"A concise 2-sentence summary of the news.\",\n  \"detailedSummary\": \"A comprehensive overview of the event, implications, and context.\",\n  \"revenue\": \"The anual company porfits (if not provided use your internal knowledge)\"\n  \"pubDate\": \"The publication date {{ $json.data.match('\\nDate') }}.\"\n}\n\nConstraint Checklist:\n1. Output MUST be valid JSON.\n2. Do NOT include ```json or ``` markers.\n3. Do NOT include any text outside the JSON object.\n4. Keys must be exactly as listed above (camelCase).",
+        "text": "=Analyze the following news articles about a company:\n\nCompany: {{ $('loopOverItems').item.json.fields.companyName }}\nTitle: {{ $('checksIfFilteredDataAreValid').item.json.data }} [\\nTitle]\nDescription: {{ $('checksIfFilteredDataAreValid').item.json.data }} [\\nDescription]\nDate: {{ $('checksIfFilteredDataAreValid').item.json.data }} [\\nDate]\n\nBased ONLY on the text above, generate a raw JSON object (NO markdown, NO backticks, NO explanations) with the following exact keys and structure:\n\n{\n  \"shortSummary\": \"A concise 2-sentence summary of the news.\",\n  \"detailedSummary\": \"A comprehensive overview of the event, implications, and context.\",\n  \"revenue\": \"The anual company porfits (if not provided use your internal knowledge)\"\n  \"pubDate\": \"The publication date {{ $json.data.match('\\nDate') }}.\"\n}\n\nConstraint Checklist:\n1. Output MUST be valid JSON.\n2. Do NOT include ```json or ``` markers.\n3. Do NOT include any text outside the JSON object.\n4. Keys must be exactly as listed above (camelCase).\n5. Any key that has no provided info and you have nothing about it in your internal knowledge SET IT TO Uknown AND NO OTHER STRINGS.\n6. Ecpecially for revenue, DO NOT INCLUDE ANY TEXTS EXCEPT THE actual revenue NUMBER AND THE LETTER LIKE K or M or B.",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -627,7 +628,9 @@
             "shortSummary": "={{ $json.shortSummary }}",
             "detailedSummary": "={{ $json.detailedSummary }}",
             "lastupdate": "={{ new Date().toISOString() }}",
-            "errors": "={{ $json.errors }}"
+            "errors": "={{ $json.errors }}",
+            "publicationDate": "={{ $json.pubDate }}",
+            "revenue": "={{ $json.revenue }}"
           },
           "matchingColumns": [
             "Title"
@@ -677,6 +680,24 @@
               "defaultMatch": false,
               "readOnly": false,
               "removed": false
+            },
+            {
+              "id": "publicationDate",
+              "displayName": "publicationDate",
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "revenue",
+              "displayName": "revenue",
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "readOnly": false,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -686,7 +707,7 @@
       "type": "n8n-nodes-base.nocoDb",
       "typeVersion": 4,
       "position": [
-        736,
+        752,
         1328
       ],
       "id": "6f2e5c1c-ec60-4028-9d40-9a691b831ba4",
@@ -732,7 +753,7 @@
           "value": {
             "newsErrorMessage": "={{ $json.isValid }}",
             "newsErrorDate": "={{ new Date().toISOString() }}",
-            "newsError": "={{ $json.errors }}"
+            "newsError": "="
           },
           "matchingColumns": [
             "Title"
@@ -793,8 +814,8 @@
               "removed": false
             },
             {
-              "id": "NERetryCount",
-              "displayName": "NERetryCount",
+              "id": "NERetryCounter",
+              "displayName": "NERetryCounter",
               "type": "number",
               "display": true,
               "defaultMatch": false,
@@ -934,8 +955,8 @@
               "removed": false
             },
             {
-              "id": "NERetryCount",
-              "displayName": "NERetryCount",
+              "id": "NERetryCounter",
+              "displayName": "NERetryCounter",
               "type": "number",
               "display": true,
               "defaultMatch": false,
@@ -968,7 +989,7 @@
       "type": "n8n-nodes-base.nocoDb",
       "typeVersion": 4,
       "position": [
-        736,
+        752,
         1168
       ],
       "id": "70b8bfbd-c542-41a9-98c1-5af7dfe12002",
@@ -1070,7 +1091,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        896,
+        928,
         1328
       ],
       "id": "066aa37e-fca0-4a96-b5db-4daeab870375",
@@ -1104,7 +1125,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        896,
+        928,
         1168
       ],
       "id": "1b775dd8-ec43-48f7-b48a-731f628cbe9a",
@@ -2383,7 +2404,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ae0f16e7-7742-45a6-9f40-94ac77276131",
+  "versionId": "55c2f9fb-4834-4644-b068-0746c71c91e2",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "874a53071ff3a00f0c61ef646f6b22fc209bc14b7a8783a508106cc2e7a274f7"

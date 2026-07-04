@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
@@ -11,7 +9,10 @@ services:
       - ./n8n_data:/home/node/.n8n 
     environment:
       - N8N_SECURE_COOKIE=false
-      - NODE_FUNCTION_ALLOW_EXTERNAL=axios,lodash 
+      - NODE_FUNCTION_ALLOW_EXTERNAL=axios,lodash
+      - N8N_LOG_LEVEL=debug
+      - EXECUTIONS_DATA_PURNE=true
+      - EXECUTIONS_DATA_MAX_AGE=72 
 
   nocodb:
     image: nocodb/nocodb:latest

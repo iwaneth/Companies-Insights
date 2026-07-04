@@ -354,12 +354,15 @@
       "id": "0e98c6f3-0193-468c-a647-67fb44aa986c",
       "name": "Discord",
       "webhookId": "93efef84-4594-4fb4-a9cf-8a937b165093",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
       "credentials": {
         "discordWebhookApi": {
           "id": "QJ2EFo8lbaHb5abA",
           "name": "Discord Webhook account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -560,7 +563,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "74ada2ad-f67c-408e-8326-265683d9cd1d",
+  "versionId": "172f35f9-1fea-4f93-b32e-34f93244ad55",
   "meta": {
     "instanceId": "874a53071ff3a00f0c61ef646f6b22fc209bc14b7a8783a508106cc2e7a274f7"
   },
