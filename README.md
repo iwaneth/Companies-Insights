@@ -1,5 +1,15 @@
 # Company Intelligence
 
+![Docker](https://img.shields.io/badge/docker-required-2496ED)
+
+![n8n](https://img.shields.io/badge/n8n-automation-EA4B73)
+
+![NocoDB](https://img.shields.io/badge/NocoDB-database-1AA6A6)
+
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688)
+
 A containerized full-stack enterprise intelligence platform that automatically collects, analyzes, and aggregates latest news and company profile data in real-time. Built with **Docker**, **n8n**, **NocoDB**, and **FastAPI**.
 
 ## Overview
@@ -27,7 +37,7 @@ With robust error handling, multi-model AI fallback support, and containerized d
 
 **n8n Workflow**
 
-![News Table](demos/news_workflow_demo.png)
+![News Workflow](demos/news_workflow_demo.png)
 
 **NocoDB Table**
 
@@ -66,8 +76,8 @@ Company Intelligence Platform
 |      ├── News Table
 |      ├── Profile Table
 |      └── Errors Table
-├── FastAPI Backend (Serevre Side)
-|   ├── NocoDB Client For Fetcing Data
+├── FastAPI Backend (Server Side)
+|   ├── NocoDB Client For Fetching Data
 │   └── FastAPI app: Processing/Displaying
 └── Frontend Dashboard (User Interface)
     └── Interactive Data Visualization
@@ -102,7 +112,8 @@ Company Intelligence Platform
 
 ### Prerequisites
 
-- Docker & Docker Compose installed
+- **Docker & Docker Compose** - [Install Docker Desktop](https://docs.docker.com/get-docker/) (includes Compose, works on Windows/macOS/Linux)
+- **Python 3.10+** - [Install from python.org](https://www.python.org/downloads/) (needed to run the FastAPI backend outside Docker)
 - API Keys for AI models (OpenAI, Gemini, Groq, etc.)
 - NocoDB API token
 
@@ -125,7 +136,7 @@ Company Intelligence Platform
 
    ```env
    # Example configuration:
-   openAi > Gemeni > groq
+   openAi > Gemini > groq
 
    # NocoDB Configuration
    NOCODB_API_TOKEN=your_nocodb_token_here
@@ -149,7 +160,7 @@ Company Intelligence Platform
 1. Access n8n at `http://localhost:5678`
 2. Import workflows from workflow.example/ in the repository:
    - `newsFetchingWorkflow.json` - For automated news collection
-   - `profileFetchWorkflow.json` - For auomated profile data refresh
+   - `profileFetchWorkflow.json` - For automated profile data refresh
    - `clearingNewsOldData.json` - For erasing old news data
    - `clearingProfileOldData.json` - For erasing old Profile Data
 
@@ -164,26 +175,47 @@ Company Intelligence Platform
 - For all workflows:
 
 * Link NocoDB credentials for data persistence
-* Link discord webhook token for getting notification on faliures (optional, if you don't want to link it you have to remove the discord nodes before)
+* Link discord webhook token for getting notification on failures (optional, if you don't want to link it you have to remove the discord nodes before)
 
-####k Connect NocoDB
+#### Connect NocoDB
 
 1. Access NocoDB at `http://localhost:8080`
-2. Create tables for:
-   - Companies (with profile fields)
-   - News Articles
-   - Error Logs
+2. Import tables from workflow.example/ in the repository:
+
+- `profile and news - lastNews.csv`
+- `profile and news - profile.csv`
+- `profile and news - errors.csv`
 
 3. Generate and copy your NocoDB API token
 4. Add to n8n workflows for data persistence
 
-#### Suggestions / next steps
+#### Back-end Starter
 
-- Inspect `workflow.example/` for example CSV exports and map the tables you need to serve.
-- Add pydantic models for typed responses and transform NocoDB rows into shape expected by your frontend.
-- Add pagination, filtering, and field selection endpoints to reduce payload sizes.
-- Add caching (Redis) for expensive/large table requests.
-- Secure endpoints and only expose necessary columns to the frontend.
+1. Make sure Python 3.10+ is installed (see Prerequisites above).
+2. Open the project folder and set up a virtual environment:
+
+```bash
+cd 'path to the folder'
+python3 -m venv venv
+source ./venv/bin/activate
+```
+
+3. Install dependencies:
+
+- ```bash
+  pip install -r requirements.txt
+  ```
+
+4. Run the app with uvicorn:
+
+- ```bash
+  uvicorn app:app --host 127.0.0.1 --port 8000
+  ```
+
+5. Access the page:
+
+- to see server status and health: http://127.0.0.1:8000/
+- to see the home page (displaying page): http://127.0.0.1:8000/dashboard
 
 ## Project Structure
 
@@ -207,12 +239,14 @@ CompanyIntelligence/
 ├── .env.example                        # environment variables
 ├── .gitignore                          # Git ignore rules
 ├── README.md                           # This file
-├── SECURITY.md                         # This file
 ├── app.py                              # FastAPI app
+├── CONTRIBUTING.md                     # This file
 ├── docker-compose.yml                  # Docker services configuration
 ├── LICENSE                             # permissions
 ├── nocodb_client.py                    # NocoDB client
-└── requirements.txt                    # This file
+├── requirements.txt                    # This file
+├── SECURITY.md                         # This file
+└── test_app.py                         # Testing FastAPI server
 ```
 
 ## Configuration Details
@@ -316,16 +350,7 @@ Frontend Dashboard (User Interface)
 
 ## Contributing
 
-Contributions are welcome! Whether you have ideas for improvements, bug fixes, or want to help with the FastAPI backend or frontend development, feel free to reach out.
-
-### Areas for Contribution
-
-- Improving workflow efficiency
-- Adding new data sources
-- Enchancing error handling
-- Frontend development
-- design suggestions
-- Testing and quality assurance
+Contributions are welcom! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Dependencies
 
@@ -347,4 +372,4 @@ For issues, questions, or suggestions:
 
 **Started in 28/05/2026 and still goes in rate of 6 hours a day**
 
-Last Updated: Julie 2026
+Last Updated: July 2026
