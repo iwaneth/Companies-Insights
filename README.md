@@ -35,7 +35,7 @@ With robust error handling, multi-model AI fallback support, and containerized d
 
 ### Data Cleanup Workflows
 
-![Profile Old Data Cleaning](demo/profile_old_data_cleaning_demo.png)
+![Profile Old Data Cleaning](demos/profile_old_data_cleaning_demo.png)
 
 ![News Old Data Cleaning](demos/news_old_data_cleaning_demo.png)
 
@@ -210,6 +210,7 @@ CompanyIntelligence/
 ├── SECURITY.md                         # This file
 ├── app.py                              # FastAPI app
 ├── docker-compose.yml                  # Docker services configuration
+├── LICENSE                             # permissions
 ├── nocodb_client.py                    # NocoDB client
 └── requirements.txt                    # This file
 ```
@@ -284,21 +285,21 @@ Frontend Dashboard (User Interface)
 
 ## Roadmap
 
-### Phase 1 (Current)
+### Phase 1 (Done)
 
 - ✅ n8n workflow orchestration
 - ✅ Multi-model AI support with fallbacks
 - ✅ NocoDB database integration
 - ✅ Error handling & logging
 
-### Phase 2 (In Progress)
+### Phase 2 (Current)
 
 - FastAPI backend development
   - REST API endpoints for data access
   - Data filtering and search capabilities
   - Rate limiting and authentication
 
-### Phase 3 (Planned)
+### Phase 3 (In Progress)
 
 - Frontend Dashboard
   - Real-time data visualization
@@ -321,8 +322,9 @@ Contributions are welcome! Whether you have ideas for improvements, bug fixes, o
 
 - Improving workflow efficiency
 - Adding new data sources
-- Enhancing error handling
+- Enchancing error handling
 - Frontend development
+- design suggestions
 - Testing and quality assurance
 
 ## Dependencies
@@ -332,10 +334,6 @@ Contributions are welcome! Whether you have ideas for improvements, bug fixes, o
 - **NocoDB**: Open-source database platform with UI
 - **FastAPI**: Modern Python web framework (backend)
 - **Multiple AI APIs**: OpenAI, Anthropic, Groq, etc.
-
-## License
-
-This project is open source. Feel free to use and modify for your needs.
 
 ## Support
 
@@ -347,6 +345,6 @@ For issues, questions, or suggestions:
 
 ---
 
-**Started in 28/05/2026 and still goes in rate of 8 hours a day**
+**Started in 28/05/2026 and still goes in rate of 6 hours a day**
 
 Last Updated: Julie 2026
