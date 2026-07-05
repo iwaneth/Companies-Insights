@@ -1551,13 +1551,22 @@
               }
             },
             {
-              "id": "cbfbaab8-2475-4bd5-98c5-6cb8231e74ac",
-              "leftValue": "={{ $('validateOutput1').item.json.isValid }}",
-              "rightValue": "={{ 'validData' || 'averagValueDataMissing' }}",
+              "id": "dcce1bbd-bbac-410e-b338-6186aa6912ad",
+              "leftValue": "={{ ($('validateOutput1').item.json.errors).includes('INVALID profile' || 'INVALID industry') }}",
+              "rightValue": "",
               "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cbfbaab8-2475-4bd5-98c5-6cb8231e74ac",
+              "leftValue": "={{ ($('validateOutput1').item.json.errors).length }}",
+              "rightValue": 4,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
               }
             }
           ],
@@ -2351,7 +2360,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ee90925b-2521-47c6-a52b-25e04dfd367f",
+  "versionId": "c2f88ba0-ba83-425d-82ee-9bb513fb8c1d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "874a53071ff3a00f0c61ef646f6b22fc209bc14b7a8783a508106cc2e7a274f7"

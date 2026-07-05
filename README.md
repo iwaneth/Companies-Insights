@@ -11,6 +11,38 @@ Company Intelligence is designed to help you monitor and analyze company informa
 
 With robust error handling, multi-model AI fallback support, and containerized deployment, this platform can run anywhere Docker is available.
 
+## Screenshots
+
+### Profile Data
+
+**n8n Workflow**
+
+![Profile Workflow](demos/profile_workflow_demo.png)
+
+**NocoDB Table**
+
+![Profile Table](demos/profile_table_demo.png)
+
+### News Data
+
+**n8n Workflow**
+
+![News Table](demos/news_workflow_demo.png)
+
+**NocoDB Table**
+
+![News Table](demos/news_table_demo.png)
+
+### Data Cleanup Workflows
+
+![Profile Old Data Cleaning](demo/profile_old_data_cleaning_demo.png)
+
+![News Old Data Cleaning](demos/news_old_data_cleaning_demo.png)
+
+### Error Logging
+
+![Errors Table](demos/errors_table_demo.png)
+
 ## Key Features
 
 - **Automated Workflows**: n8n-powered workflows for continuous data collection and analysis
@@ -25,19 +57,26 @@ With robust error handling, multi-model AI fallback support, and containerized d
 ```
 Company Intelligence Platform
 ├── n8n (Workflow Orchestration)
+|   ├── Clearing Old News Data Workflow
 │   ├── News Fetching Workflow
-│   └── Profile Fetching Workflow
+│   ├── Clearing Old Profile Data Workflow
+|   └── Profile Fetching Workflow
 ├── NocoDB (Database & UI)
 │   └── Centralized Data Storage
-├── FastAPI Backend (In Development)
-│   └── Data Access & Processing API
-└── Frontend Dashboard (Coming Soon)
+|      ├── News Table
+|      ├── Profile Table
+|      └── Errors Table
+├── FastAPI Backend (Serevre Side)
+|   ├── NocoDB Client For Fetcing Data
+│   └── FastAPI app: Processing/Displaying
+└── Frontend Dashboard (User Interface)
     └── Interactive Data Visualization
 ```
 
 ### Data Collected
 
 **Company Profiles**:
+
 - Company name
 - Industry
 - Website
@@ -47,12 +86,14 @@ Company Intelligence Platform
 - Key Products
 
 **Company News**:
+
 - Latest news articles
 - Timestamps
 - Sources
 - Analysis & insights
 
 **Error Tracking**:
+
 - Failed data fetches
 - Processing errors
 - API failures
@@ -62,23 +103,26 @@ Company Intelligence Platform
 ### Prerequisites
 
 - Docker & Docker Compose installed
-- API Keys for AI models (OpenAI, Gemeni, Groq, etc.)
+- API Keys for AI models (OpenAI, Gemini, Groq, etc.)
 - NocoDB API token
 
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/iwaneth/CompanyIntelligence.git
    cd CompanyIntelligence
    ```
 
 2. **Set up environment variables**:
+
    ```bash
    cp .env.example .env
    ```
 
 3. **Configure your API keys in `.env`**:
+
    ```env
    # Example configuration:
    openAi > Gemeni > groq
@@ -89,6 +133,7 @@ Company Intelligence Platform
    ```
 
 4. **Start the platform**:
+
    ```bash
    docker-compose up -d
    ```
@@ -102,19 +147,26 @@ Company Intelligence Platform
 #### Configure n8n Workflows
 
 1. Access n8n at `http://localhost:5678`
-2. Import workflows from the repository:
+2. Import workflows from workflow.example/ in the repository:
    - `newsFetchingWorkflow.json` - For automated news collection
    - `profileFetchWorkflow.json` - For auomated profile data refresh
    - `clearingNewsOldData.json` - For erasing old news data
    - `clearingProfileOldData.json` - For erasing old Profile Data
 
-3. In each workflow, configure the AI model nodes with your API keys:
-   - Set primary AI model credentials
-   - Configure fallback nodes with alternative API keys for resilience
-   - Link NocoDB credentials for data persistence
-   - Link discord webhook token for getting notification on faliures (optional, if you don't want to link it you have to remove the discord nodes before)
+3. Configuration:
 
-#### Connect NocoDB
+- In fetching workflows:
+
+* configure the AI model nodes with your API keys:
+* Set primary AI model credentials
+* Configure fallback nodes with alternative API keys for resilience
+
+- For all workflows:
+
+* Link NocoDB credentials for data persistence
+* Link discord webhook token for getting notification on faliures (optional, if you don't want to link it you have to remove the discord nodes before)
+
+####k Connect NocoDB
 
 1. Access NocoDB at `http://localhost:8080`
 2. Create tables for:
@@ -125,18 +177,41 @@ Company Intelligence Platform
 3. Generate and copy your NocoDB API token
 4. Add to n8n workflows for data persistence
 
+#### Suggestions / next steps
+
+- Inspect `workflow.example/` for example CSV exports and map the tables you need to serve.
+- Add pydantic models for typed responses and transform NocoDB rows into shape expected by your frontend.
+- Add pagination, filtering, and field selection endpoints to reduce payload sizes.
+- Add caching (Redis) for expensive/large table requests.
+- Secure endpoints and only expose necessary columns to the frontend.
+
 ## Project Structure
 
 ```
 CompanyIntelligence/
-├── docker-compose.yml              # Docker services configuration
-├── newsFetchingWorkflow.json        # n8n workflow for news collection
-├── profileFetchWorkflow.json        # n8n workflow for company profiles
-├── profile and news - profile.csv   # Sample company profile data
-├── profile and news - lastNews.csv  # Sample news data
-├── profile and news - errors.csv    # Error logs
-├── .gitignore                       # Git ignore rules
-└── README.md                        # This file
+├── demos/
+|   └── ...                             # demo screenshots
+├── static/
+|  ├── styles4.css                      # css styles conf
+|  └── walhaven-vqd8j8.jpg              # example wallpaper
+├── templates/
+|   └── HomePage.html                   # html displaying page
+├── workflow.example/
+|  ├── clearingNewsOldData.json         # n8n workflow for news old data erasing
+|  ├── newsFetchingWorkflow.json        # n8n workflow for news collection
+|  ├── clearingProfileOldData.json      # n8n workflow for profile old data erasing
+|  ├── profileFetchWorkflow.json        # n8n workflow for profile refreshing
+|  ├── profile and news - profile.csv   # Sample profile data
+|  ├── profile and news - lastNews.csv  # Sample news data
+|  └── profile and news - errors.csv    # Errors logs
+├── .env.example                        # environment variables
+├── .gitignore                          # Git ignore rules
+├── README.md                           # This file
+├── SECURITY.md                         # This file
+├── app.py                              # FastAPI app
+├── docker-compose.yml                  # Docker services configuration
+├── nocodb_client.py                    # NocoDB client
+└── requirements.txt                    # This file
 ```
 
 ## Configuration Details
@@ -144,6 +219,7 @@ CompanyIntelligence/
 ### AI Model Fallback System
 
 The system supports up to 3+ AI model APIs with automatic fallback:
+
 1. **Primary Model**: Your main AI service (e.g., OpenAI)
 2. **Fallback Model 1**: Secondary service (e.g., Anthropic Claude)
 3. **Fallback Model 2**: Tertiary service (e.g., Groq, or others)
@@ -153,6 +229,7 @@ If the primary model fails, the workflow automatically uses the fallback models 
 ### Error Handling & Logging
 
 All errors are automatically logged to `profile and news - errors.csv` with:
+
 - Timestamp of error
 - Error type
 - Failed operation
@@ -174,74 +251,33 @@ Data Processing & Validation
     ↓
 NocoDB Database
     ↓
-FastAPI Backend (Coming Soon)
+FastAPI Backend (Server Side)
     ↓
-Frontend Dashboard (Coming Soon)
+Frontend Dashboard (User Interface)
 ```
-#### CompanyIntelligence - Backend Starter
-
-This workspace contains a minimal FastAPI backend that can fetch data from a NocoDB instance and expose it for frontend consumption.
-
-Quick start
-
-1. Create a virtual environment and activate it:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Copy and edit environment variables:
-
-```bash
-cp .env.example .env
-# edit .env to set NOCODB_BASE_URL and NOCODB_API_KEY if needed
-```
-
-4. Run the app with uvicorn (development):
-
-```bash
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-```
-
-5. Example requests:
-
-- Health: `GET /`
-- Fetch a table: `GET /nocodb/{project}/{table}?limit=50`
-
-Suggestions / next steps
-
-- Inspect `workflow.example/` for example CSV exports and map the tables you need to serve.
-- Add pydantic models for typed responses and transform NocoDB rows into shape expected by your frontend.
-- Add pagination, filtering, and field selection endpoints to reduce payload sizes.
-- Add caching (Redis) for expensive/large table requests.
-- Secure endpoints and only expose necessary columns to the frontend.
-
 
 ## Troubleshooting
 
 ### Workflows not running?
+
 - Check n8n container logs: `docker logs n8n_local`
 - Verify all API keys are correctly configured
 - Ensure NocoDB token is valid and has proper permissions
 
 ### Data not appearing in NocoDB?
+
 - Verify NocoDB service is running: `docker ps`
 - Check NocoDB connection credentials in n8n
 - Ensure database tables exist in NocoDB
 
 ### AI Model failures?
+
 - Check API key validity for all configured models
 - Monitor error logs in `profile and news - errors.csv`
-- Verify fallback nodes are properly configured with alternative API keys
+  -- Verify fallback nodes are properly configured with alternative API keys
 
 ### Docker issues?
+
 - Pull latest images: `docker-compose pull`
 - Rebuild containers: `docker-compose up -d --build`
 - Check Docker disk space: `docker system df`
@@ -249,24 +285,28 @@ Suggestions / next steps
 ## Roadmap
 
 ### Phase 1 (Current)
+
 - ✅ n8n workflow orchestration
 - ✅ Multi-model AI support with fallbacks
 - ✅ NocoDB database integration
 - ✅ Error handling & logging
 
 ### Phase 2 (In Progress)
+
 - FastAPI backend development
   - REST API endpoints for data access
   - Data filtering and search capabilities
   - Rate limiting and authentication
 
 ### Phase 3 (Planned)
+
 - Frontend Dashboard
   - Real-time data visualization
   - Interactive company monitoring
   - News feed and alerts
-  
+
 ### Phase 4 (Future - v2)
+
 - Multi-user system
 - User authentication & authorization
 - Personalized dashboards
@@ -278,6 +318,7 @@ Suggestions / next steps
 Contributions are welcome! Whether you have ideas for improvements, bug fixes, or want to help with the FastAPI backend or frontend development, feel free to reach out.
 
 ### Areas for Contribution
+
 - Improving workflow efficiency
 - Adding new data sources
 - Enhancing error handling
@@ -299,6 +340,7 @@ This project is open source. Feel free to use and modify for your needs.
 ## Support
 
 For issues, questions, or suggestions:
+
 - Check the troubleshooting section above
 - Review error logs in CSV files
 - Check n8n and NocoDB documentation
@@ -307,4 +349,4 @@ For issues, questions, or suggestions:
 
 **Started in 28/05/2026 and still goes in rate of 8 hours a day**
 
-Last Updated: June 2026
+Last Updated: Julie 2026
