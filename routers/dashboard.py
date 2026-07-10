@@ -2,11 +2,11 @@ from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter
 import asyncio
 from nocodb_client import fetch_table
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 def render(template_name: str, request: Request, context: dict = None):
@@ -20,11 +20,7 @@ def clean_record(record: dict) -> dict:
         for key, value in record.items()
     }
 
-@app.get("/")
-async def root():
-    return {"status": "ok", "source": "CompanyIntelligence backend"}
-
-@app.get("/dashboard", response_class=HTMLResponse)
+@router.get("/dashboard", response_class=HTMLResponse)
 async def home(request: Request):
     profileData, newsData = await asyncio.gather(
         fetch_table("profile_and_news", "profile"),
@@ -43,7 +39,7 @@ async def home(request: Request):
         companies.append({**company, "news": company_news})
 
     return render(
-        "HomePage.html",
+        "dashboard.html",
         request,
         {
             "companies": companies,

@@ -1,0 +1,181 @@
+* {
+  font-family: "Poppins", sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #111827;
+}
+
+.page-shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+.sidebar {
+  width: 240px;
+  background: #ffffff;
+  padding: 32px 20px;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-button {
+  text-decoration: none;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #374151;
+  font-weight: 600;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.nav-button:hover,
+.nav-button.active {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.content-area {
+  flex: 1;
+  padding: 40px;
+}
+
+.hero {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  color: #111827;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: #6b7280;
+  max-width: 640px;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.company-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.company-header h3,
+.news-list h4 {
+  margin: 0;
+  color: #111827;
+}
+
+.company-header span {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.company-profile {
+  margin: 0 0 16px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.company-details {
+  margin: 0 0 16px;
+}
+
+.company-details div {
+  margin-bottom: 10px;
+}
+
+.company-details dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+  margin-bottom: 3px;
+}
+
+.company-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #374151;
+}
+
+.company-details a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.news-list {
+  margin-top: 18px;
+}
+
+.news-item {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.news-item p {
+  margin: 0 0 8px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.news-item time,
+.empty-state {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .page-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .content-area {
+    padding: 24px;
+  }
+}

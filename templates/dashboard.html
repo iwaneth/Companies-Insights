@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/dashboard.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <h2 class="brand">Company Intelligence</h2>
+        <nav class="nav-links">
+          <a class="nav-button" href="/home">Home</a>
+          <a class="nav-button active" href="/dashboard">Dashboard</a>
+          <a class="nav-button" href="/features">Settings</a>
+        </nav>
+      </aside>
+
+      <main class="content-area">
+        <section class="hero">
+          <h1 class="page-title">Company intelligence dashboard</h1>
+          <p class="page-subtitle">
+            Review company profiles and the latest related news in one place.
+          </p>
+        </section>
+
+        <section class="data-grid">
+          {% for company in companies %}
+          <article class="company-card">
+            <header class="company-header">
+              <h3>{{ company.companyName }}</h3>
+              {% if company.industry %}
+              <span>{{ company.industry }}</span>
+              {% endif %}
+            </header>
+
+            {% if company.profile %}
+            <p class="company-profile">{{ company.profile }}</p>
+            {% endif %}
+
+            <dl class="company-details">
+              {% if company.website %}
+              <div>
+                <dt>Website</dt>
+                <dd>
+                  <a
+                    href="{{ company.website }}"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {{ company.website }}
+                  </a>
+                </dd>
+              </div>
+              {% endif %} {% if company.keyProducts %}
+              <div>
+                <dt>Products</dt>
+                <dd>{{ company.keyProducts }}</dd>
+              </div>
+              {% endif %} {% if company.competitors %}
+              <div>
+                <dt>Competitors</dt>
+                <dd>{{ company.competitors }}</dd>
+              </div>
+              {% endif %} {% if company.tags %}
+              <div>
+                <dt>Tags</dt>
+                <dd>{{ company.tags }}</dd>
+              </div>
+              {% endif %}
+            </dl>
+
+            <section class="news-list">
+              <h4>Latest news</h4>
+              {% if company.news %} {% for article in company.news %}
+              <article class="news-item">
+                {% if article.shortSummary %}
+                <p>{{ article.shortSummary }}</p>
+                {% elif article.detailedSummary %}
+                <p>{{ article.detailedSummary }}</p>
+                {% else %}
+                <p>No summary available yet.</p>
+                {% endif %} {% if article.publicationDate %}
+                <time>{{ article.publicationDate }}</time>
+                {% endif %}
+              </article>
+              {% endfor %} {% else %}
+              <p class="empty-state">No news available yet.</p>
+              {% endif %}
+            </section>
+          </article>
+          {% else %}
+          <p class="empty-state">No companies found.</p>
+          {% endfor %}
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

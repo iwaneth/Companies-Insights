@@ -4,7 +4,8 @@ nocodb_data/
 
 # Ignore environments
 .env
-venv/
+.venv/
+.venv-broken/
 __pycache__/
 
 # Ignore OS generated files

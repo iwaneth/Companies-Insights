@@ -6,13 +6,13 @@ services:
     ports:
       - "5678:5678"
     volumes:
-      - ./n8n_data:/home/node/.n8n 
+      - ./n8n_data:/home/node/.n8n
     environment:
       - N8N_SECURE_COOKIE=false
       - NODE_FUNCTION_ALLOW_EXTERNAL=axios,lodash
       - N8N_LOG_LEVEL=debug
       - EXECUTIONS_DATA_PURNE=true
-      - EXECUTIONS_DATA_MAX_AGE=72 
+      - EXECUTIONS_DATA_MAX_AGE=72
 
   nocodb:
     image: nocodb/nocodb:latest
@@ -22,3 +22,13 @@ services:
       - "8080:8080"
     volumes:
       - ./nocodb_data:/usr/app/data/
+  app:
+    build: .
+    container_name: company_intelligence_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - nocodb
