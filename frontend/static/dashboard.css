@@ -40,6 +40,9 @@ body {
 }
 
 .nav-button {
+  display: block;
+  width: 100%;
+  border: 0;
   text-decoration: none;
   padding: 12px 14px;
   border-radius: 10px;
@@ -47,6 +50,8 @@ body {
   font-weight: 600;
   background: #f9fafb;
   transition: all 0.2s ease;
+  text-align: left;
+  cursor: pointer;
 }
 
 .nav-button:hover,
@@ -83,11 +88,44 @@ body {
 }
 
 .company-card {
+  min-width: 0;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.company-card > .company-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 4px 16px;
+}
+
+.company-card > .company-details div {
+  min-width: 0;
+}
+
+.related-records {
+  margin-top: 24px;
+}
+
+.related-records h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.related-card {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.related-card .company-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 4px 12px;
 }
 
 .company-header {
@@ -137,6 +175,17 @@ body {
   color: #374151;
 }
 
+.company-details pre {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
+.empty-value {
+  color: #9ca3af;
+}
+
 .company-details a {
   color: #2563eb;
   text-decoration: none;
@@ -150,6 +199,10 @@ body {
   border-top: 1px solid #e5e7eb;
   padding-top: 12px;
   margin-top: 12px;
+}
+
+.news-item h4 {
+  margin: 8px 0;
 }
 
 .news-item p {

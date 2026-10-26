@@ -4,13 +4,13 @@
 
 ![n8n](https://img.shields.io/badge/n8n-automation-EA4B73)
 
-![NocoDB](https://img.shields.io/badge/NocoDB-database-1AA6A6)
+![Supabase](https://img.shields.io/badge/Supabase-backend%20database-3ECF8E)
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688)
 
-A containerized full-stack enterprise intelligence platform that automatically collects, analyzes, and aggregates latest news and company profile data in real-time. Built with **Docker**, **n8n**, **NocoDB**, and **FastAPI**.
+A containerized full-stack enterprise intelligence platform that automatically collects, analyzes, and aggregates latest news and company profile data in real-time. Built with **Docker**, **n8n**, **NocoDB** (for the existing workflows), **Supabase** (for the FastAPI dashboard), and **FastAPI**.
 
 ## Overview
 
@@ -77,7 +77,7 @@ Company Intelligence Platform
 |      ├── Profile Table
 |      └── Errors Table
 ├── FastAPI Backend (Server Side)
-|   ├── NocoDB Client For Fetching Data
+|   ├── Supabase Client For Fetching Data
 │   └── FastAPI app: Processing/Displaying
 └── Frontend Dashboard (User Interface)
     └── Interactive Data Visualization
@@ -115,7 +115,7 @@ Company Intelligence Platform
 - **Docker & Docker Compose** - [Install Docker Desktop](https://docs.docker.com/get-docker/) (includes Compose, works on Windows/macOS/Linux)
 - **Python 3.10+** - [Install from python.org](https://www.python.org/downloads/) (needed to run the FastAPI backend outside Docker)
 - API Keys for AI models (OpenAI, Gemini, Groq, etc.)
-- NocoDB API token
+- Supabase project URL and key for the FastAPI dashboard
 
 ### Installation
 
@@ -138,10 +138,12 @@ Company Intelligence Platform
    # Example configuration:
    openAi > Gemini > groq
 
-   # NocoDB Configuration
-   NOCODB_API_TOKEN=your_nocodb_token_here
-   NOCODB_BASE_URL=http://nocodb:8080
+   # FastAPI server-side database configuration
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_SECRET_KEY=your-server-only-supabase-secret-key
    ```
+
+   The secret key is only for the FastAPI backend. Never put it in frontend code or expose it to browsers.
 
 4. **Start the platform**:
 
@@ -191,31 +193,37 @@ Company Intelligence Platform
 
 #### Back-end Starter
 
-1. Make sure Python 3.10+ is installed (see Prerequisites above).
-2. Open the project folder and set up a virtual environment:
+The Python interpreter selected on your computer is separate from the Python 3.12 runtime in Docker. To run the backend locally, create a project virtual environment and install dependencies once:
 
 ```bash
-cd 'path to the folder'
-python3 -m venv venv
-source ./venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-3. Install dependencies:
+On Windows PowerShell, activate it with `.venv\Scripts\Activate.ps1`.
 
-- ```bash
-  pip install -r requirements.txt
-  ```
+Create `.env` from `.env.example` and set your Supabase project URL and a server-only Supabase secret key. Keep it private: do not commit `.env`, add the key to frontend code, or expose it to browsers. If `.env` currently contains `SUPABASE_KEY`, replace that variable with `SUPABASE_SECRET_KEY` using the secret key from Supabase's API settings.
 
-4. Run the app with uvicorn:
+Before using the dashboard, run `supabase/migrations/20261026221500_private_backend_company_data.sql` in the Supabase SQL Editor. It enables Row Level Security on the four company tables, revokes direct table access from `public`, `anon`, and `authenticated`, and grants table reads to the backend's `service_role`. The SQL files in `test-db/` are example seed statements and must be run separately if those sample rows have not already been imported.
 
-- ```bash
-  uvicorn app:app --host 127.0.0.1 --port 8000
-  ```
+The dashboard reads `companies`, `halfDynamicProperties`, `companyProfile`, and `companyNews`, joining child rows to company cards by `company_id`. It fetches up to 100 rows from each table.
 
-5. Access the page:
+Run the API from the repository root:
 
-- to see server status and health: http://127.0.0.1:8000/
-- to see the home page (displaying page): http://127.0.0.1:8000/dashboard
+```bash
+python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
+```
+
+Then open http://127.0.0.1:8000/dashboard. The website is public; FastAPI fetches the data server-side. This protects the Supabase tables from direct anonymous Supabase API queries, but data displayed on a public page can still be viewed and copied by visitors. No app container is needed for local backend development.
+
+Run the backend tests without Docker:
+
+```bash
+PYTHONPATH=backend python -m pytest backend/
+```
+
+The n8n workflows remain configured for NocoDB; switching those workflows to Supabase is a separate migration.
 
 ## Project Structure
 

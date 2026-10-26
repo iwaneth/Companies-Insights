@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/dashboard.css" />
+  </head>
+  <body>
+    {% macro fields(record) %}
+    <dl class="company-details">
+      {% for column, value in record.items() %}
+      <div>
+        <dt>{{ column }}</dt>
+        <dd>
+          {% if value is none or value == "" %}
+          <span class="empty-value">—</span>
+          {% elif value is mapping or (value is sequence and value is not string) %}
+          <pre>{{ value | tojson(indent=2) }}</pre>
+          {% else %}
+          {{ value }}
+          {% endif %}
+        </dd>
+      </div>
+      {% endfor %}
+    </dl>
+    {% endmacro %}
+
+    <div class="page-shell">
+      <aside class="sidebar">
+        <h2 class="brand">Company Intelligence</h2>
+        <nav class="nav-links">
+          <a class="nav-button" href="/home">Home</a>
+          <a class="nav-button active" href="/dashboard">Dashboard</a>
+          <a class="nav-button" href="/features">Settings</a>
+        </nav>
+      </aside>
+
+      <main class="content-area">
+        <section class="hero">
+          <h1 class="page-title">Company intelligence dashboard</h1>
+          <p class="page-subtitle">
+            Company profiles, dynamic properties, and news are grouped by company.
+          </p>
+        </section>
+
+        <section class="data-grid">
+          {% for company in companies %}
+          <article class="company-card">
+            <header class="company-header">
+              <h2>{{ company.companyName or "Company " ~ company.id }}</h2>
+              {% if company.industry %}
+              <span>{{ company.industry }}</span>
+              {% endif %}
+            </header>
+
+            {{ fields(company) }}
+
+            <section class="related-records">
+              <h3>Profile</h3>
+              {% for profile in company.profiles %}
+              <article class="related-card">{{ fields(profile) }}</article>
+              {% else %}
+              <p class="empty-state">No profile available.</p>
+              {% endfor %}
+            </section>
+
+            <section class="related-records">
+              <h3>Dynamic properties</h3>
+              {% for properties in company.properties %}
+              <article class="related-card">{{ fields(properties) }}</article>
+              {% else %}
+              <p class="empty-state">No dynamic properties available.</p>
+              {% endfor %}
+            </section>
+
+            <section class="related-records">
+              <h3>News</h3>
+              {% for article in company.news %}
+              <article class="news-item">
+                <h4>{{ article.title or "News item" }}</h4>
+                {{ fields(article) }}
+              </article>
+              {% else %}
+              <p class="empty-state">No news available.</p>
+              {% endfor %}
+            </section>
+          </article>
+          {% else %}
+          <p class="empty-state">No companies are visible to this account.</p>
+          {% endfor %}
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

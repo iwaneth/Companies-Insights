@@ -1,34 +1,29 @@
 services:
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     container_name: n8n_local
     restart: unless-stopped
     ports:
       - "5678:5678"
     volumes:
-      - ./n8n_data:/home/node/.n8n
+      - ./n8n_data:/home/node/.n8n:Z
     environment:
       - N8N_SECURE_COOKIE=false
       - NODE_FUNCTION_ALLOW_EXTERNAL=axios,lodash
       - N8N_LOG_LEVEL=debug
-      - EXECUTIONS_DATA_PURNE=true
+      - EXECUTIONS_DATA_PURGE=true
       - EXECUTIONS_DATA_MAX_AGE=72
-
-  nocodb:
-    image: nocodb/nocodb:latest
-    container_name: nocodb_local
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./nocodb_data:/usr/app/data/
   app:
+    profiles: ["dev"]
     build: .
-    container_name: company_intelligence_app
+    container_name: backend_app
     restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - .:/app:z
     depends_on:
-      - nocodb
+      - n8n
