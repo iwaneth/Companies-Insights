@@ -1,0 +1,1784 @@
+{
+  "updatedAt": "2026-10-26T17:24:55.656Z",
+  "createdAt": "2026-07-22T13:41:32.930Z",
+  "id": "KPLBGNiLF234y1d2",
+  "name": "scheduleRefresher",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://www.wikidata.org/w/api.php?action=wbgetentities&ids={{ $json.companyObj.wikiid }}&props=claims|labels|descriptions&languages=en&format=json&formatversion=2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "THA-n8n (iwanetahraoui5@gmail.com)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -5872,
+        -2016
+      ],
+      "id": "d92f584b-e96a-452f-8512-b2ed3cdd93fa",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a68e9ba4-8549-4118-83f7-01bc8119709f",
+              "leftValue": "={{ $json.error ? 'failed' : 'success' }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2e8ad553-36cb-4646-bed0-6f59b68026f9",
+              "leftValue": "={{ Boolean($json?.warnings) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5680,
+        -2016
+      ],
+      "id": "c6bf2fef-f580-4c2b-8f45-c75edb0d0304",
+      "name": "checkIfE1"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.wikidata.org/w/api.php?action=wbgetentities&ids={{ $json.qidsJoined }}&props=labels&languages=en&format=json&formatversion=2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "THA-n8n (iwanetahraoui5@gmail.com)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -5680,
+        -1872
+      ],
+      "id": "33e33bde-d2af-430a-88ae-d604eb16b561",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const entities = $input.first().json.entities;\nconst entityKey = Object.keys(entities)[0];\nconst raw = entities[entityKey]?.claims || {};\n\nfunction getValue(prop) {\n  return prop?.[0]?.mainsnak?.datavalue?.value || null;\n}\n\nconst country = getValue(raw.P17);\nconst industry = getValue(raw.P452);\nconst ceo = getValue(raw.P169);\nconst headquarters = getValue(raw.P159);\nconst parentCompany = getValue(raw.P749);\nconst subsidiary = getValue(raw.P355);\nconst stockSymbole = getValue(raw.P249);\nconst stockExchange = getValue(raw.P414);\nconst keyProducts = getValue(raw.P1056);\n\nconst filtered = {\n  founded: getValue(raw.P571),\n  website: getValue(raw.P856),\n  employees: getValue(raw.P1128),\n  revenue: getValue(raw.P2139),\n  netIncome: getValue(raw.P2295),\n  marketCap: getValue(raw.P2226),\n  country, industry, ceo, headquarters,\n  parentCompany, subsidiary, stockSymbole, stockExchange,keyProducts\n};\n\nconst qidMap = {\n  country: country?.id || null,\n  industry: industry?.id || null,\n  ceo: ceo?.id || null,\n  headquarters: headquarters?.id || null,\n  parentCompany: parentCompany?.id || null,\n  subsidiary: subsidiary?.id || null,\n  stockSymbole: stockSymbole?.id || null,\n  stockExchange: stockExchange?.id || null,\n  keyProducts:keyProducts?.id || null\n};\n\nconst cleanQids = Object.values(qidMap).filter(id => id !== null);\n\nreturn [{\n  json: {\n    filteredData: filtered,\n    qidMap,\n    qidsJoined: cleanQids.join('|')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5872,
+        -1872
+      ],
+      "id": "112730ad-c2ae-469d-8de2-7ff99b750652",
+      "name": "filteringData",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.entities || {};\nconst qidMap = $('filteringData').first().json.qidMap;\n\nfunction formatCompactNumber(value, isCurrency = false) {\n  if (value === null || value === undefined) return null;\n\n  const num = parseFloat(String(value).replace('+', ''));\n  if (isNaN(num)) return null;\n\n  const absNum = Math.abs(num);\n  const sign = num < 0 ? '-' : '';\n  const suffix = isCurrency ? ' $' : '';\n\n  let formatted;\n  if (absNum >= 1e12) {\n    formatted = (absNum / 1e12).toFixed(2) + 'T';\n  } else if (absNum >= 1e9) {\n    formatted = (absNum / 1e9).toFixed(2) + 'B';\n  } else if (absNum >= 1e6) {\n    formatted = (absNum / 1e6).toFixed(2) + 'M';\n  } else if (absNum >= 1e3) {\n    formatted = (absNum / 1e3).toFixed(0) + 'K';\n  } else {\n    formatted = absNum.toString();\n  }\n\n  return sign + formatted + suffix;\n}\n\nfunction objectAssign(object) {\n  const filtered = $('filteringData').first().json.filteredData || {};\n  Object.assign(\n    object, {\n      founded: filtered.founded?.time || null,\n      website: filtered.website || null,\n      employees: filtered.employees?.amount || null,\n      revenue: filtered.revenue?.amount || null,\n      netIncome: filtered.netIncome?.amount || null,\n      marketCap: filtered.marketCap?.amount || null\n    }\n  )\n  return object;\n}\n\nlet readyRaw = {};\nreadyRaw = objectAssign(readyRaw);\n\nfunction getLabel(qid) {\n  if (!qid) return null;\n  return raw[qid]?.labels?.en?.value || null;\n}\n\n\nconst companiesProperties = {\n  founded: $('filteringData').first().json.filteredData.founded?.time || null,\n  country: getLabel(qidMap.country),\n  industry: getLabel(qidMap.industry),\n  website: $('filteringData').first().json.filteredData.website,\n  headquarters: getLabel(qidMap.headquarters),\n  stockSymbole: getLabel(qidMap.stockSymbole),\n  parentCompany: getLabel(qidMap.parentCompany),\n  subsidiaries: getLabel(qidMap.subsidiary),\n  stockExchange: getLabel(qidMap.stockExchange)\n};\n\nconst HProperties = {\n  ceo: getLabel(qidMap.ceo),\n  keyProducts: getLabel(qidMap.keyProducts),\n  revenue: formatCompactNumber(readyRaw.revenue, true),\n  netIncome: formatCompactNumber(readyRaw.netIncome, true),\n  marketCap: formatCompactNumber(readyRaw.marketCap, true),\n  employees: formatCompactNumber(readyRaw.employees, false),\n}\n\nreturn [{\n  json: {\n    companiesProperties,\n    HProperties\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5424,
+        -1856
+      ],
+      "id": "c5e9b1df-78d5-4d00-a81a-f175613c85b8",
+      "name": "dataSlicer",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a68e9ba4-8549-4118-83f7-01bc8119709f",
+              "leftValue": "={{ $json.error ? 'failed' : 'success' }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2e8ad553-36cb-4646-bed0-6f59b68026f9",
+              "leftValue": "={{ Boolean($json?.warnings) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5424,
+        -2016
+      ],
+      "id": "e430e84f-e9a5-4d02-9ab7-b5cd29a05b77",
+      "name": "checkIfE2"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.companiesWiki }}",
+        "dataPropertyName": "companiesWikiHash"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -4448,
+        -2368
+      ],
+      "id": "22f26fd6-73b9-485b-b60b-4be70d26533b",
+      "name": "Crypto"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.HBase }}",
+        "dataPropertyName": "HWikiHash"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -4432,
+        -1984
+      ],
+      "id": "66227283-ca32-468f-bf3f-d812b39597c5",
+      "name": "Crypto1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    companiesWiki: JSON.stringify($input.first().json.companiesProperties)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4608,
+        -2368
+      ],
+      "id": "7363659c-2d03-4d64-8964-7fc43fff9edd",
+      "name": "stringer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.all()[1].json\nconst arranged = {\n  founded: raw.companyC.founded,\n  country: raw.companyC.country,\n  industry: raw.companyC.industry,\n  website: raw.companyC.website,\n  headquarters: raw.companyC.headquarters,\n  stockSymbole: raw.companyC.stockSymbole,  \n  parentCompany: raw.companyC.parentCompany,\n  subsidiaries: raw.companyC.subsidiaries,\n  stockExchange: raw.companyC.stockExchange\n}\nreturn [arranged]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4752,
+        -2528
+      ],
+      "id": "0bc98a5b-e64a-4541-ac06-70931b9ecdad",
+      "name": "dataOrganizer"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    companiesBase: JSON.stringify($input.first().json)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4608,
+        -2528
+      ],
+      "id": "bd6cef29-cf5a-4888-842c-e399f90a1ad2",
+      "name": "stringer1"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.companiesBase }}",
+        "dataPropertyName": "companiesBaseHash"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -4448,
+        -2528
+      ],
+      "id": "3cc16f3d-b04b-49c7-a5e1-b1fc0ead0eb1",
+      "name": "Crypto2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -4272,
+        -2528
+      ],
+      "id": "48c043d7-a7af-4aaa-a870-cd43e8207b0f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1fe2ca4d-4e1f-4acb-8fb5-d40e7312b9ad",
+              "leftValue": "={{ $json.companiesWikiHash }}",
+              "rightValue": "={{ $json.companiesBaseHash }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4272,
+        -2368
+      ],
+      "id": "97508b41-eac2-439c-8dc9-489734e88d4e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.HWiki }}",
+        "dataPropertyName": "HBaseHash"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -4432,
+        -1824
+      ],
+      "id": "7bbaff2f-7d97-4e59-b415-f3da66acb1a9",
+      "name": "Crypto3"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -4256,
+        -1984
+      ],
+      "id": "05038cf7-a5e0-44a1-8804-55a30075a23e",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1fe2ca4d-4e1f-4acb-8fb5-d40e7312b9ad",
+              "leftValue": "={{ $json.HWikiHash }}",
+              "rightValue": "={{ $json.HBaseHash }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4256,
+        -1824
+      ],
+      "id": "a3aa79d8-0f6e-44f0-b0b2-e3b468dd36fd",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawCompaniesWiki= $('dataSlicer').first().json.companiesProperties;\nconst rawCompaniesBase = $('dataOrganizer').first().json;\n\nconst changes = {\n  cfounded: rawCompaniesBase.founded != rawCompaniesWiki.founded,\n  ccountry: rawCompaniesBase.country != rawCompaniesWiki.country,\n  cindustry: rawCompaniesBase.industry != rawCompaniesWiki.industry,\n  cwebsite: rawCompaniesBase.website != rawCompaniesWiki.website,\n  cheadquarters: rawCompaniesBase.headquarters != rawCompaniesWiki.headquarters,\n  cstockSymbole: rawCompaniesBase.stockSymbole != rawCompaniesWiki.stockSymbole,\n  cparentCompany: rawCompaniesBase.parentCompany != rawCompaniesWiki.parentCompany,\n  csubsidiaries: rawCompaniesBase.subsidiaries != rawCompaniesWiki.subsidiaries,\n  cstockExchange: rawCompaniesBase.stockExchange != rawCompaniesWiki.stockExchange\n};\nreturn [changes];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4096,
+        -2368
+      ],
+      "id": "6fd9ae7b-1994-49c7-9919-09d6b5efea8c",
+      "name": "propertyChecker"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawHWiki= $('dataSlicer').first().json.HProperties;\nconst rawHBase = $('dataOrganizer1').first().json;\n\nconst changes = {\n  cceo: rawHBase.ceo != rawHWiki.ceo,\n  ckeyProducts: rawHBase.keyProducts != rawHWiki.keyProducts,\n  crevenue: rawHBase.revenue != rawHWiki.revenue,\n  cnetIncome: rawHBase.netIncome != rawHWiki.netIncome,\n  cmarketCap: rawHBase.marketCap != rawHWiki.marketCap,\n  cemployees: rawHBase.employees != rawHWiki.employees\n};\nreturn [changes];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4080,
+        -1824
+      ],
+      "id": "17b05c2d-72ef-47cf-8c43-030fcaa4fcaf",
+      "name": "propertyChecker1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DJLjFqn0ViscUhjH",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DJLjFqn0ViscUhjH",
+          "cachedResultName": "companies"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "properties": "={{ $json }}"
+          },
+          "matchingColumns": [
+            ""
+          ],
+          "schema": [
+            {
+              "id": "properties",
+              "displayName": "properties",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3744,
+        -2528
+      ],
+      "id": "54522899-f816-4472-bf88-6a6697a5ce88",
+      "name": "Call 'companies'",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ds1HfzylCmUBG7zm",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ds1HfzylCmUBG7zm",
+          "cachedResultName": "companyH"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "properties": "={{ $json }}"
+          },
+          "matchingColumns": [
+            "properties"
+          ],
+          "schema": [
+            {
+              "id": "properties",
+              "displayName": "properties",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3728,
+        -1984
+      ],
+      "id": "467f483e-047d-479b-99a4-139292c90ba6",
+      "name": "Call 'companyH'",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -5264,
+        -2448
+      ],
+      "id": "c54d41ed-c195-4c77-b013-858181e2c117",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst companiesStatus = {\n  companyObj: {\n    companyName: raw.companyName,\n    id: raw.id,\n    status: raw.status,\n    lastCompanyUpdate: raw.lastCompaniesUpdate,\n    lastHUpdates: raw.lastHUpdate,\n    Hstatus: raw.Hstatus,\n    wikiid: raw.wikiid\n  },\n}\nconst companiesConstants = {\n  companyC: {\n    founded: raw.founded,\n    country: raw.country,\n    industry: raw.industry,\n    website: raw.website,\n    headquarters: raw.headquarters,\n    stockSymbole: raw.stockSymbole,\n    parentCompany: raw.parentCompany,\n    subsidiaries: raw.subsidiaries,\n    stockExchange: raw.stockExchange\n  }\n}\nconst companiesHalfDynaimc = {\n  companyH: {\n    ceo: raw.ceo,\n    keyProducts: raw.keyProducts,\n    revenue: raw.revenue,\n    netIncome: raw.netIncome,\n    marketCap: raw.marketCap,\n    employees: raw.employees\n  }\n}\nreturn [companiesStatus, companiesConstants, companiesHalfDynaimc];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5040,
+        -2448
+      ],
+      "id": "7e080e27-7dbc-4c9c-8773-bf32cd7e139b",
+      "name": "dataOrganizer2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "id",
+              "field2": "company_id"
+            }
+          ]
+        },
+        "joinMode": "enrichInput2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5440,
+        -2448
+      ],
+      "id": "796a9a56-feed-4444-b6bf-3b70e9e3eb96",
+      "name": "Merge2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    HWiki: JSON.stringify($input.first().json.HProperties)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4592,
+        -1824
+      ],
+      "id": "ae9e5cc3-acd1-44f5-b3e2-d02444fb60fb",
+      "name": "stringer3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.all()[2].json\nconst arranged = {\n  ceo: raw.companyH.ceo,\n  keyProducts: raw.companyH.keyProducts,\n  revenue: raw.companyH.revenue,\n  netIncome: raw.companyH.netIncome,\n  marketCap: raw.companyH.marketCap,\n  employees: raw.companyH.employees\n}\nreturn [arranged]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4736,
+        -1984
+      ],
+      "id": "6760b034-05f1-4ce9-95df-cd6f810c9b45",
+      "name": "dataOrganizer1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    HBase: JSON.stringify($input.first().json)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4592,
+        -1984
+      ],
+      "id": "1e54f1e9-32ed-418d-ae7f-9e90f426722f",
+      "name": "stringer4"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "schedule refresher is done!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        -5264,
+        -2592
+      ],
+      "id": "37fecf33-ed85-4bf1-a9d6-8f451c4e5f03",
+      "name": "Discord",
+      "webhookId": "9f764d17-938c-4e1b-8c48-5dc5222692c6",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "QJ2EFo8lbaHb5abA",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "companies",
+        "returnAll": true,
+        "orderBy": "id",
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5664,
+        -2528
+      ],
+      "id": "db9901b8-4f68-4c39-baae-dfeb405437e6",
+      "name": "Get many rows",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GwET2MYazADadCrs",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "halfDynamicProperties",
+        "returnAll": true,
+        "orderBy": "id",
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5664,
+        -2336
+      ],
+      "id": "14155919-ce13-4ece-a139-5b15a8603827",
+      "name": "Get many rows1",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "GwET2MYazADadCrs",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -5872,
+        -2432
+      ],
+      "id": "55697502-dac3-4173-8f4f-aa306f2e6ee2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cpropertyCheck = $input.first().json\nconst newestCUpdates = $('dataSlicer').first().json.HProperties\nconst hybird = {cpropertyCheck, newestCUpdates}\nreturn [hybird];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3920,
+        -1824
+      ],
+      "id": "896b126a-7b96-4ca7-b22f-5fced21832e9",
+      "name": "arrangingHData"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cpropertyCheck = $input.first().json\nconst newestCUpdates = $('dataSlicer').first().json.companiesProperties\nconst constantData = {cpropertyCheck, newestCUpdates}\nreturn [constantData];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3936,
+        -2368
+      ],
+      "id": "8bbbd4ae-7de2-41fb-b995-db9783b94d88",
+      "name": "arrangingCData"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -3280,
+        -2192
+      ],
+      "id": "2632fd02-47f9-4045-9a54-4aeca258a57d",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const properties = {\n  propertyCheck: $input.first().json.cpropertyCheck,\n  newValues: $input.first().json.newestCUpdates,\n  id: {\n    ID: $('Loop Over Items3').first().json.id\n  }\n}\n\nreturn properties;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3920,
+        -1984
+      ],
+      "id": "c5ffb0cc-994f-4c78-b0e4-b59ed6b665a4",
+      "name": "finalStructure1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const properties = {\n  propertyCheck: $input.first().json.cpropertyCheck,\n  newValues: $input.first().json.newestCUpdates,\n  id: {\n    ID: $('Loop Over Items3').first().json.id\n  }\n}\n\nreturn properties;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3936,
+        -2528
+      ],
+      "id": "0173511c-e497-4e5c-a683-0cb0ee40c02a",
+      "name": "finalStructure"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "wikidata query failed!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        -5424,
+        -1712
+      ],
+      "id": "a21a21b6-7995-4e92-90dd-c27e86fa4f22",
+      "name": "Discord1",
+      "webhookId": "9f764d17-938c-4e1b-8c48-5dc5222692c6",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "QJ2EFo8lbaHb5abA",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -4080,
+        -1984
+      ],
+      "id": "c1869086-45c0-4ed2-b70a-4f5bac5b64fd",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -4096,
+        -2528
+      ],
+      "id": "d8026019-0e26-453c-99aa-c62eea2d8028",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -5440,
+        -2592
+      ],
+      "id": "0d87d527-39fa-4071-84b9-2464e5b46a05",
+      "name": "No Operation, do nothing3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        -2000
+      ],
+      "id": "64cbebc6-9220-4326-933d-58190b4f6fa1",
+      "name": "No Operation, do nothing4"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TIt3iryuWKKGdK7N",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TIt3iryuWKKGdK7N",
+          "cachedResultName": "companyProfile"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cproperties": "={{ $json }}"
+          },
+          "matchingColumns": [
+            "cproperties"
+          ],
+          "schema": [
+            {
+              "id": "cproperties",
+              "displayName": "cproperties",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        -2896,
+        -2192
+      ],
+      "id": "5a4e28ec-e2a1-4ad9-af46-18f116d8da19",
+      "name": "Call 'companyProfile'",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a9307ca-4276-472f-9a82-6d4a9fe8d4ed",
+              "name": "founded",
+              "value": "={{ `+${$json.founded}` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -5040,
+        -2592
+      ],
+      "id": "f67093a4-419c-4913-bf3e-ead213014e6f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const companyId = $('Loop Over Items3').first().json.company_id;\nconst hasChanged = $input.first().json.hasChanged;\nconst Cproperties = $('dataSlicer').first().json.companiesProperties;\nreturn [{companyId, hasChanged, Cproperties}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3568,
+        -2368
+      ],
+      "id": "25db9df5-c088-433c-b3f7-8229b69a1191",
+      "name": "2 outputs to 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const companyId = $('Loop Over Items3').first().json.company_id;\nconst hasChanged2 = $input.first().json.hasChanged2;\nconst Hproperties = $('dataSlicer').first().json.HProperties;\nreturn [{companyId, hasChanged2, Hproperties}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3552,
+        -1824
+      ],
+      "id": "52b3bc88-ec84-455b-a7c9-a86caedae984",
+      "name": "2 outputs to 1 (2)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.hasChanged }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "9910e60c-9101-478f-828f-8ad109226f18"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "9dae344a-e88c-41ec-9911-44adcdc9b429",
+                    "leftValue": "={{ $json.hasChanged }}",
+                    "rightValue": false,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "2faeecf1-7eac-40e7-b529-16322fce6379",
+                    "leftValue": "={{ $json.hasChanged2 }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "a4869042-dd0e-4ba0-ab00-1d0778a1cb79",
+                    "leftValue": "={{ $json.hasChanged2 }}",
+                    "rightValue": false,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -3104,
+        -2224
+      ],
+      "id": "b3c26cd3-b726-4afe-b957-f08c0237699f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const hasChanged = true;\nreturn [{hasChanged}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3568,
+        -2528
+      ],
+      "id": "cd10ce2c-b2a6-41b1-b5eb-e9faec03531e",
+      "name": "hasChanged>true"
+    },
+    {
+      "parameters": {
+        "jsCode": "const hasChanged = false;\nreturn [{hasChanged}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3744,
+        -2368
+      ],
+      "id": "3e070b0b-e05a-4425-9ac5-d1df9d04e163",
+      "name": "hasChanged>false"
+    },
+    {
+      "parameters": {
+        "jsCode": "const hasChanged2 = true;\nreturn [{hasChanged2}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3552,
+        -1984
+      ],
+      "id": "7bc16599-d377-4ca2-987d-ecbaa1af36ac",
+      "name": "hasChanged>true1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const hasChanged2 = false;\nreturn [{hasChanged2}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3728,
+        -1824
+      ],
+      "id": "9d330090-dd29-4f34-8ae8-80b54391afcd",
+      "name": "hasChanged>false1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const data = item.json;\n\n  if (data.companiesProperties?.founded) {\n    data.companiesProperties.founded =\n      data.companiesProperties.founded.split('T')[0];\n  }\n\n  return { json: data };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5136,
+        -2000
+      ],
+      "id": "d4428140-a283-4e31-b452-0caa938cb3fe",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "checkIfE1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "checkIfE1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIfE1": {
+      "main": [
+        [
+          {
+            "node": "filteringData",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filteringData": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "checkIfE2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "checkIfE2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIfE2": {
+      "main": [
+        [
+          {
+            "node": "dataSlicer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dataSlicer": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stringer": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dataOrganizer": {
+      "main": [
+        [
+          {
+            "node": "stringer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stringer1": {
+      "main": [
+        [
+          {
+            "node": "Crypto2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Crypto2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "hasChanged>false",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "hasChanged>false1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "propertyChecker": {
+      "main": [
+        [
+          {
+            "node": "arrangingCData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "propertyChecker1": {
+      "main": [
+        [
+          {
+            "node": "arrangingHData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'companies'": {
+      "main": [
+        [
+          {
+            "node": "hasChanged>true",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'companyH'": {
+      "main": [
+        [
+          {
+            "node": "hasChanged>true1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "dataOrganizer2": {
+      "main": [
+        [
+          {
+            "node": "dataOrganizer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "dataOrganizer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dataOrganizer1": {
+      "main": [
+        [
+          {
+            "node": "stringer4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stringer3": {
+      "main": [
+        [
+          {
+            "node": "Crypto3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stringer4": {
+      "main": [
+        [
+          {
+            "node": "Crypto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many rows1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "arrangingCData": {
+      "main": [
+        [
+          {
+            "node": "finalStructure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "arrangingHData": {
+      "main": [
+        [
+          {
+            "node": "finalStructure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "finalStructure1": {
+      "main": [
+        [
+          {
+            "node": "Call 'companyH'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "finalStructure": {
+      "main": [
+        [
+          {
+            "node": "Call 'companies'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord": {
+      "main": [
+        []
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "propertyChecker1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing2": {
+      "main": [
+        [
+          {
+            "node": "propertyChecker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing3": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "dataOrganizer2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'companyProfile'": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 outputs to 1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 outputs to 1 (2)": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Call 'companyProfile'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'companyProfile'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hasChanged>false": {
+      "main": [
+        [
+          {
+            "node": "2 outputs to 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hasChanged>true": {
+      "main": [
+        [
+          {
+            "node": "2 outputs to 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hasChanged>true1": {
+      "main": [
+        [
+          {
+            "node": "2 outputs to 1 (2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hasChanged>false1": {
+      "main": [
+        [
+          {
+            "node": "2 outputs to 1 (2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "stringer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "stringer3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "timezone": "Africa/Algiers",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        308
+      ],
+      "recurrenceRuleSignatures": [
+        "days:3"
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [
+    {
+      "id": "436a68a9-cf2b-4e12-9fed-07fa34af28a5",
+      "name": "online pull block",
+      "nodeIds": [
+        "d92f584b-e96a-452f-8512-b2ed3cdd93fa",
+        "c6bf2fef-f580-4c2b-8f45-c75edb0d0304",
+        "33e33bde-d2af-430a-88ae-d604eb16b561",
+        "112730ad-c2ae-469d-8de2-7ff99b750652",
+        "c5e9b1df-78d5-4d00-a81a-f175613c85b8",
+        "e430e84f-e9a5-4d02-9ab7-b5cd29a05b77",
+        "a21a21b6-7995-4e92-90dd-c27e86fa4f22"
+      ]
+    }
+  ],
+  "pinData": {},
+  "versionId": "95268da9-84ba-4717-a9f2-c7e2ee27cd8f",
+  "activeVersionId": "95268da9-84ba-4717-a9f2-c7e2ee27cd8f",
+  "versionCounter": 3704,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-07-22T13:41:32.936Z",
+      "createdAt": "2026-07-22T13:41:32.936Z",
+      "role": "workflow:owner",
+      "workflowId": "KPLBGNiLF234y1d2",
+      "projectId": "IevvIf2ahfSlXO20",
+      "project": {
+        "updatedAt": "2026-06-09T14:24:54.317Z",
+        "createdAt": "2026-06-09T14:22:44.803Z",
+        "id": "IevvIf2ahfSlXO20",
+        "name": "Iwane Tahraoui <iwanetahraoui5@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "d3b8f062-c020-46bf-b383-4fed300ab3f9"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "v2",
+    "description": ""
+  }
+}

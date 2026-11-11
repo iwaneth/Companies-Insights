@@ -1,0 +1,50 @@
+{
+  "updatedAt": "2026-10-23T20:35:35.000Z",
+  "createdAt": "2026-08-02T18:32:56.109Z",
+  "id": "zogIA4i1xBWQCAMP",
+  "name": "companiesHCheck",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "b53ab15f-0541-4a45-b39d-c1f38269442e",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-08-02T18:32:56.119Z",
+      "createdAt": "2026-08-02T18:32:56.119Z",
+      "role": "workflow:owner",
+      "workflowId": "zogIA4i1xBWQCAMP",
+      "projectId": "IevvIf2ahfSlXO20",
+      "project": {
+        "updatedAt": "2026-06-09T14:24:54.317Z",
+        "createdAt": "2026-06-09T14:22:44.803Z",
+        "id": "IevvIf2ahfSlXO20",
+        "name": "Iwane Tahraoui <iwanetahraoui5@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "d3b8f062-c020-46bf-b383-4fed300ab3f9"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

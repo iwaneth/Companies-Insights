@@ -17,7 +17,6 @@ services:
       - EXECUTIONS_DATA_PURGE=true
       - EXECUTIONS_DATA_MAX_AGE=72
   app:
-    profiles: ["dev"]
     build: .
     container_name: backend_app
     restart: unless-stopped
