@@ -7,20 +7,53 @@
     <link rel="stylesheet" href="/static/dashboard.css" />
   </head>
   <body>
-    {% macro fields(record) %}
+    <div class="search-bar" , style="margin-bottom: 24px">
+      <input
+        type="text"
+        id="search"
+        placeholder="Search companies..."
+        style="
+          width: 100%;
+          max-width: 400px;
+          padding: 12px;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+        "
+      />
+    </div>
+
+    <script>
+      document.getElementById("search").addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll(".company-card").forEach((card) => {
+          const name = card.querySelector("h3").textContent.toLowerCase();
+          card.style.display = name.includes(query) ? "" : "none";
+        });
+      });
+    </script>
+
+    {% macro fields(record, skip_keys=None) %}
     <dl class="company-details">
-      {% for column, value in record.items() %}
+      {% if skip_keys is none %}{% set skip_keys = ['id'] %}{% endif %} {% for
+      column, value in record.items() if column not in skip_keys %}
       <div>
-        <dt>{{ column }}</dt>
+        <dt>{{ humanize_field(column) }}</dt>
+        {% if not value %}
+        <dd class="empty-value">—</dd>
+        {% elif column == 'website' %}
         <dd>
-          {% if value is none or value == "" %}
-          <span class="empty-value">—</span>
-          {% elif value is mapping or (value is sequence and value is not string) %}
-          <pre>{{ value | tojson(indent=2) }}</pre>
-          {% else %}
-          {{ value }}
-          {% endif %}
+          <a
+            href="{{ value if value.startswith('http') else 'https://' ~ value }}"
+            target="_blank"
+            rel="noopener"
+            >{{ value }}</a
+          >
         </dd>
+        {% elif column == 'lastCompanyUpdate' %}
+        <dd>{{ format_date(value) }}</dd>
+        {% else %}
+        <dd>{{ value }}</dd>
+        {% endif %}
       </div>
       {% endfor %}
     </dl>
@@ -28,7 +61,7 @@
 
     <div class="page-shell">
       <aside class="sidebar">
-        <h2 class="brand">Company Intelligence</h2>
+        <h2 class="brand">Companies Insights</h2>
         <nav class="nav-links">
           <a class="nav-button" href="/home">Home</a>
           <a class="nav-button active" href="/dashboard">Dashboard</a>
@@ -38,9 +71,10 @@
 
       <main class="content-area">
         <section class="hero">
-          <h1 class="page-title">Company intelligence dashboard</h1>
+          <h1 class="page-title">Compannies Insights Dashboard</h1>
           <p class="page-subtitle">
-            Company profiles, dynamic properties, and news are grouped by company.
+            Company profiles, dynamic properties, and news are grouped by
+            company.
           </p>
         </section>
 
@@ -54,7 +88,7 @@
               {% endif %}
             </header>
 
-            {{ fields(company) }}
+            {{ fields(company, ['profiles', 'properties', 'news', 'id']) }}
 
             <section class="related-records">
               <h3>Profile</h3>

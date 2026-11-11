@@ -11,6 +11,15 @@ body {
   color: #111827;
 }
 
+.search-bar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
 .page-shell {
   min-height: 100vh;
   display: flex;
