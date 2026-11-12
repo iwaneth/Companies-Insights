@@ -4,53 +4,207 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
+    <!-- Make sure this points to your active CSS file containing the theme switcher styles -->
     <link rel="stylesheet" href="/static/dashboard.css" />
-  </head>
-  <body>
-    <div class="search-bar" , style="margin-bottom: 24px">
-      <input
-        type="text"
-        id="search"
-        placeholder="Search companies..."
-        style="
-          width: 100%;
-          max-width: 400px;
-          padding: 12px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-        "
-      />
-    </div>
+    <script src="/scripts/dashboard.js"></script>
+    <style>
+      /* ── Search bar centered ── */
+      .search-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 32px;
+      }
+      .search-wrapper input {
+        width: 100%;
+        max-width: 480px;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: "Poppins", sans-serif;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .search-wrapper input:focus {
+        border-color: #2563eb;
+      }
 
-    <script>
-      document.getElementById("search").addEventListener("input", (e) => {
-        const query = e.target.value.toLowerCase();
-        document.querySelectorAll(".company-card").forEach((card) => {
-          const name = card.querySelector("h3").textContent.toLowerCase();
-          card.style.display = name.includes(query) ? "" : "none";
-        });
-      });
-    </script>
+      /* ── Company card face (what's always visible) ── */
+      .company-card {
+        min-width: 0;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        position: relative;
+        overflow: hidden;
+      }
+      .company-card .card-face {
+        position: relative;
+        z-index: 2;
+      }
+      .company-card .card-face h2 {
+        margin: 0 0 4px;
+        font-size: 1.25rem;
+      }
+      .company-card .card-face span {
+        color: #6b7280;
+        font-size: 0.85rem;
+      }
 
-    {% macro fields(record, skip_keys=None) %}
-    <dl class="company-details">
-      {% if skip_keys is none %}{% set skip_keys = ['id'] %}{% endif %} {% for
-      column, value in record.items() if column not in skip_keys %}
+      /* ── News pills ── */
+      .news-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .news-pill {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          box-shadow 0.15s;
+        max-width: 260px;
+        position: relative;
+      }
+      .news-pill:hover {
+        background: #f3f4f6;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .news-pill h4 {
+        margin: 0 0 4px;
+        font-size: 0.85rem;
+        color: #111827;
+      }
+      .news-pill time {
+        font-size: 0.75rem;
+        color: #6b7280;
+      }
+
+      /* ── Hover overlay (Overview + Attributes) ── */
+      .card-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.97);
+        z-index: 5;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        overflow-y: auto;
+        padding: 20px;
+        border-radius: 16px;
+      }
+      .company-card:hover .card-overlay {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .card-overlay h3 {
+        margin: 0 0 8px;
+        font-size: 0.95rem;
+        color: #111827;
+      }
+      .card-overlay dl {
+        margin: 0 0 16px;
+      }
+      .card-overlay dl dt {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #9ca3af;
+        margin-bottom: 2px;
+      }
+      .card-overlay dl dd {
+        margin: 0 0 6px;
+        color: #374151;
+      }
+
+      /* ── Modal overlay ── */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-overlay.active {
+        display: flex;
+      }
+      .modal-box {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px 32px;
+        max-width: 800px;
+        width: 92%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+      .modal-close {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        background: none;
+        border: none;
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: #6b7280;
+        line-height: 1;
+      }
+      .modal-close:hover {
+        color: #111827;
+      }
+      .modal-box h3 {
+        margin: 0 0 6px;
+        font-size: 1.2rem;
+        color: #111827;
+      }
+      .modal-box .modal-meta {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 16px;
+      }
+      .modal-box .modal-meta a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .modal-box .modal-meta a:hover {
+        text-decoration: underline;
+      }
+      .modal-box dl {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 8px 16px;
+        margin: 0;
+      }
+      .modal-box dl dt {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #9ca3af;
+        padding-top: 2px;
+      }
+      .modal-box dl dd {
+        margin: 0;
+        color: #374151;
+        word-break: break-word;
+      }
+    </style>
+    {% macro fields(record) %}
+    <dl>
+      {% for column, value in record.items() if value %}
       <div>
         <dt>{{ humanize_field(column) }}</dt>
-        {% if not value %}
-        <dd class="empty-value">—</dd>
-        {% elif column == 'website' %}
-        <dd>
-          <a
-            href="{{ value if value.startswith('http') else 'https://' ~ value }}"
-            target="_blank"
-            rel="noopener"
-            >{{ value }}</a
-          >
-        </dd>
-        {% elif column == 'lastCompanyUpdate' %}
-        <dd>{{ format_date(value) }}</dd>
+        {% if column in ['competitors', 'tags'] and value is iterable and value
+        is not string %}
+        <dd>{{ value | join(", ") }}</dd>
         {% else %}
         <dd>{{ value }}</dd>
         {% endif %}
@@ -58,7 +212,8 @@
       {% endfor %}
     </dl>
     {% endmacro %}
-
+  </head>
+  <body>
     <div class="page-shell">
       <aside class="sidebar">
         <h2 class="brand">Companies Insights</h2>
@@ -71,60 +226,158 @@
 
       <main class="content-area">
         <section class="hero">
-          <h1 class="page-title">Compannies Insights Dashboard</h1>
+          <h1 class="page-title">Company Intelligence</h1>
           <p class="page-subtitle">
             Company profiles, dynamic properties, and news are grouped by
             company.
           </p>
         </section>
 
+        <div class="search-wrapper">
+          <input
+            type="text"
+            id="search"
+            placeholder="Search companies, industries, or keywords..."
+          />
+        </div>
+        <!-- Top Right Theme Switcher (Icons Only) -->
+        <div
+          class="top-bar-right"
+          style="display: flex; justify-content: flex-end; margin-bottom: 20px"
+        >
+          <div class="theme-switcher">
+            <input type="radio" id="light-theme" name="themes" checked />
+            <input type="radio" id="dark-theme" name="themes" />
+            <input type="radio" id="black-theme" name="themes" />
+            <span class="slider"></span>
+
+            <label for="light-theme" title="Light Mode">
+              <span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              </span>
+            </label>
+
+            <label for="dark-theme" title="Dark Mode">
+              <span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                  ></path>
+                </svg>
+              </span>
+            </label>
+
+            <label for="black-theme" title="Black Mode">
+              <span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </span>
+            </label>
+          </div>
+        </div>
+
         <section class="data-grid">
           {% for company in companies %}
-          <article class="company-card">
-            <header class="company-header">
-              <h2>{{ company.companyName or "Company " ~ company.id }}</h2>
-              {% if company.industry %}
-              <span>{{ company.industry }}</span>
+          <article class="company-card" data-company-id="{{ company.id }}">
+            <!-- Always visible face -->
+            <div class="card-face">
+              <header class="company-header">
+                <h2>{{ company.companyName or "Company " ~ company.id }}</h2>
+                {% if company.industry %}
+                <span>{{ company.industry }}</span>
+                {% endif %}
+              </header>
+
+              {% if company.news|length %}
+              <div class="news-list-container">
+                {% for article in company.news %}
+                <div
+                  class="news-preview-card"
+                  onclick="openNewsModal(this)"
+                  data-record="{{ article | tojson }}"
+                >
+                  <div class="news-header-row">
+                    <h4>{{ article.title or "News item" }}</h4>
+                    {% if article.pubDate %}
+                    <time>{{ article.pubDate | pubdate_fmt }}</time>
+                    {% endif %}
+                  </div>
+                  <p class="news-snippet">{{ article.newsArticle or "" }}</p>
+                </div>
+                {% endfor %}
+              </div>
               {% endif %}
-            </header>
+            </div>
 
-            {{ fields(company, ['profiles', 'properties', 'news', 'id']) }}
-
-            <section class="related-records">
-              <h3>Profile</h3>
-              {% for profile in company.profiles %}
-              <article class="related-card">{{ fields(profile) }}</article>
-              {% else %}
-              <p class="empty-state">No profile available.</p>
-              {% endfor %}
-            </section>
-
-            <section class="related-records">
-              <h3>Dynamic properties</h3>
-              {% for properties in company.properties %}
-              <article class="related-card">{{ fields(properties) }}</article>
-              {% else %}
-              <p class="empty-state">No dynamic properties available.</p>
-              {% endfor %}
-            </section>
-
-            <section class="related-records">
-              <h3>News</h3>
-              {% for article in company.news %}
-              <article class="news-item">
-                <h4>{{ article.title or "News item" }}</h4>
-                {{ fields(article) }}
-              </article>
-              {% else %}
-              <p class="empty-state">No news available.</p>
-              {% endfor %}
-            </section>
+            <!-- Smooth Expanding Hover Overlay -->
+            <div class="card-overlay">
+              <div class="overlay-content">
+                <h3>Overview</h3>
+                {{ fields(company.details) }} {% if company.properties|length %}
+                <h3>Attributes</h3>
+                {% for prop in company.properties %} {{ fields(prop) }} {%
+                endfor %} {% endif %} {% if company.profiles|length %}
+                <h3>Profile</h3>
+                {% for profile in company.profiles %} {{ fields(profile) }} {%
+                endfor %} {% endif %}
+              </div>
+            </div>
           </article>
           {% else %}
-          <p class="empty-state">No companies are visible to this account.</p>
+          <p class="empty-state">No companies are visible.</p>
           {% endfor %}
         </section>
       </main>
+    </div>
+
+    <!-- ── News Modal ── -->
+    <div class="modal-overlay" id="newsModal" onclick="closeNewsModal(event)">
+      <div class="modal-box" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeNewsModal()">&times;</button>
+        <h3 id="modalTitle">News item</h3>
+        <div class="modal-meta" id="modalMeta"></div>
+        <dl id="modalDl"></dl>
+      </div>
     </div>
   </body>
 </html>
