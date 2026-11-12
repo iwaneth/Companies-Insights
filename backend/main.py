@@ -26,7 +26,7 @@ app.mount(
     name="scripts",
 )
 
-app.include_router(home.router)
+app.include_router(home.router) 
 app.include_router(dashboard.router)
 app.include_router(features.router)
 
