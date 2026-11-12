@@ -12,6 +12,7 @@ Templates/
 supabase/
 # Ignore OS generated files
 .DS_Store
+.cursor/
 .pytest_cache/
 docker-starter.sh
 docker-stop.sh
