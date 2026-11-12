@@ -16,8 +16,10 @@ services:
       - N8N_LOG_LEVEL=debug
       - EXECUTIONS_DATA_PURGE=true
       - EXECUTIONS_DATA_MAX_AGE=72
+      # Note: the following environment variables are set exactly to match the device potentials.
+      # They can be changed to match your own environment and requirements.
   app:
-    profiles: ["dev"]
+    profiles: ["dev"] # This service is disabled temporarily for development purposes. You can enable it by removing the 'profiles' line.
     build: .
     container_name: backend_app
     restart: unless-stopped

@@ -12,7 +12,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 from routers import dashboard, features, home
 
-app = FastAPI(debug=True)  #temporary
+app = FastAPI(debug=True)  # debug=True is set for development purposes
 
 app.mount(
     "/static",

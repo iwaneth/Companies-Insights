@@ -11,17 +11,20 @@ Company Intelligence is designed with security best practices to protect your AP
 ### How Credentials Are Stored
 
 **n8n Credential Encryption:**
+
 - All API keys, tokens, and credentials are **stored securely in n8n's encrypted database**, NOT in code or configuration files
 - n8n uses **AES-256 encryption** for credential storage
 - Credentials are encrypted at rest and never exposed in exported workflow JSON files
 - The workflow export files only contain **credential IDs** (harmless references), not actual secrets
 
 **NocoDB Database:**
+
 - Runs in an isolated Docker container
 - Database files are stored in the `nocodb_data/` volume
 - Keep this directory secure and never commit it to version control
 
 **n8n Data Directory:**
+
 - All encrypted credentials are stored in `n8n_data/` directory
 - This directory is in `.gitignore` and should never be committed
 - Back up this directory securely if you need to preserve credentials
@@ -29,6 +32,7 @@ Company Intelligence is designed with security best practices to protect your AP
 ### What's NOT in the Repository
 
 The following are **intentionally excluded** from version control:
+
 - `.env` files
 - `n8n_data/` directory (encrypted credentials)
 - `nocodb_data/` directory (database files)
@@ -53,11 +57,12 @@ When you first start the application:
      - **NocoDB API Token**: Add your NocoDB token
      - **Discord Webhook**: Add your Discord webhook URL
 
-3. **Import Workflows**: 
+3. **Import Workflows**:
    - Import `newsFetchingWorkflow.json` and `profileFetchWorkflow.json`
    - The workflows automatically reference the credentials you created
 
 **Advantages:**
+
 - ✅ Credentials never leave n8n's secure storage
 - ✅ Easy to rotate credentials
 - ✅ Can revoke access without code changes
@@ -75,6 +80,7 @@ environment:
 ```
 
 Then set environment variables before running:
+
 ```bash
 export GROQ_API_KEY=your-key
 docker-compose up -d
@@ -135,6 +141,7 @@ docker-compose up -d
 ### If You Accidentally Committed a Secret
 
 1. **Remove from Git History** (if secret was committed):
+
    ```bash
    # Use git-filter-branch or BFG Repo-Cleaner
    git filter-branch --tree-filter 'rm -f .env' HEAD
@@ -174,6 +181,7 @@ docker-compose up -d
 ### What's in the Workflow Files?
 
 The exported workflow JSON files (`newsFetchingWorkflow.json`, `profileFetchWorkflow.json`) contain:
+
 - ✅ Workflow logic and node configuration
 - ✅ Credential ID references (NOT actual credentials)
 - ✅ Data processing rules
@@ -204,16 +212,19 @@ The exported workflow JSON files (`newsFetchingWorkflow.json`, `profileFetchWork
 ## 🔄 Credential Rotation Checklist
 
 ### Monthly
+
 - [ ] Review n8n execution logs for errors
 - [ ] Check API provider dashboards for usage anomalies
 - [ ] Verify Discord webhook is still working
 
 ### Quarterly
+
 - [ ] Rotate API keys (Groq, Google, etc.)
 - [ ] Regenerate NocoDB API token
 - [ ] Update Discord webhook if needed
 
 ### Annually
+
 - [ ] Security audit of workflows
 - [ ] Review and update this security policy
 - [ ] Backup encrypted credentials securely
@@ -241,14 +252,14 @@ If you discover a security vulnerability:
 
 ### Security Best Practices Summary
 
-| Practice | Why | How |
-|----------|-----|-----|
-| Never commit `.env` files | Prevents credential leakage | Use `.gitignore` |
-| Use n8n for credential storage | Credentials are encrypted | Configure in n8n UI |
-| Rotate credentials regularly | Limits damage if compromised | Update credentials quarterly |
-| Monitor API usage | Detect unauthorized access | Check provider dashboards |
-| Backup securely | Disaster recovery | Use encrypted backups |
-| Review error logs | Catch issues early | Check `errors.csv` weekly |
+| Practice                       | Why                          | How                          |
+| ------------------------------ | ---------------------------- | ---------------------------- |
+| Never commit `.env` files      | Prevents credential leakage  | Use `.gitignore`             |
+| Use n8n for credential storage | Credentials are encrypted    | Configure in n8n UI          |
+| Rotate credentials regularly   | Limits damage if compromised | Update credentials quarterly |
+| Monitor API usage              | Detect unauthorized access   | Check provider dashboards    |
+| Backup securely                | Disaster recovery            | Use encrypted backups        |
+| Review error logs              | Catch issues early           | Check `errors.csv` weekly    |
 
 ---
 

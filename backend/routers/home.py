@@ -15,7 +15,9 @@ def render(template_name: str, request: Request, context: dict = None):
  
 # @router.get("/home", response_class=HTMLResponse)
 # async def home(request: Request):
-    # return render("home.html", request) -- disabled temporary
+    # return render("home.html", request) 
+
+# -- disabled temporarily for development purposes.
 
 
 @router.get("/home", response_class=HTMLResponse)
