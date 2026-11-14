@@ -17,11 +17,16 @@ Company Intelligence is designed with security best practices to protect your AP
 - Credentials are encrypted at rest and never exposed in exported workflow JSON files
 - The workflow export files only contain **credential IDs** (harmless references), not actual secrets
 
-**NocoDB Database:**
+**Supabase Database:**
 
-- Runs in an isolated Docker container
-- Database files are stored in the `nocodb_data/` volume
-- Keep this directory secure and never commit it to version control
+- Company data lives in Supabase (hosted Postgres)
+- Row Level Security is enabled on all four company tables via `supabase/migrations/`
+- Direct access from `public`, `anon`, and `authenticated` roles is revoked; only the backend's `service_role` can read the tables
+
+**FastAPI Backend:**
+
+- `SUPABASE_SECRET_KEY` lives only in `.env` on the server — it must never appear in frontend code, templates, or browser-visible responses
+- The dashboard is a public page: anyone can view the data it displays, but they cannot query Supabase directly
 
 **n8n Data Directory:**
 
@@ -35,7 +40,6 @@ The following are **intentionally excluded** from version control:
 
 - `.env` files
 - `n8n_data/` directory (encrypted credentials)
-- `nocodb_data/` directory (database files)
 - API keys, tokens, or secrets of any kind
 
 See `.gitignore` for complete exclusion list.
@@ -52,13 +56,12 @@ When you first start the application:
 2. **Create Credentials**:
    - Go to **Settings** → **Credentials**
    - Click **New** for each credential type needed:
-     - **Groq API**: Add your Groq API key
-     - **Google Gemini API**: Add your Google API key
-     - **NocoDB API Token**: Add your NocoDB token
-     - **Discord Webhook**: Add your Discord webhook URL
+     - **AI provider APIs**: Groq, Google Gemini, OpenAI, etc.
+     - **Supabase**: URL + secret key used by the workflows
+     - **Discord Webhook**: Add your Discord webhook URL (optional)
 
 3. **Import Workflows**:
-   - Import `newsFetchingWorkflow.json` and `profileFetchWorkflow.json`
+   - Import the JSON files from `n8n-workflows/` (e.g. `companyNews.json`, `companyProfile.json`, ... etc)
    - The workflows automatically reference the credentials you created
 
 **Advantages:**
@@ -109,20 +112,6 @@ docker-compose up -d
    - Review n8n execution logs for failed requests
    - Monitor error logs in `profile and news - errors.csv`
 
-### NocoDB
-
-1. **Strong Database Passwords**
-   - Use a strong password if you expose NocoDB to the network
-
-2. **Limit Access**
-   - Keep NocoDB on `localhost` only in development
-   - Use firewall rules in production
-   - Consider VPN/private network access
-
-3. **Backup Your Data**
-   - Regularly backup the `nocodb_data/` volume
-   - Store backups in a secure location
-
 ### Discord Webhooks
 
 1. **Webhook Security**
@@ -133,8 +122,6 @@ docker-compose up -d
 2. **Rotate Webhooks**
    - Recreate webhooks if they've been exposed
    - Update n8n credentials immediately
-
----
 
 ## 🚨 Incident Response
 
@@ -180,7 +167,7 @@ docker-compose up -d
 
 ### What's in the Workflow Files?
 
-The exported workflow JSON files (`newsFetchingWorkflow.json`, `profileFetchWorkflow.json`) contain:
+The exported workflow JSON files in `n8n-workflows/` contain:
 
 - ✅ Workflow logic and node configuration
 - ✅ Credential ID references (NOT actual credentials)
@@ -193,7 +180,7 @@ The exported workflow JSON files (`newsFetchingWorkflow.json`, `profileFetchWork
 ### Workflow Best Practices
 
 1. **Error Logging**
-   - Errors are logged to `profile and news - errors.csv`
+   - See
    - Review these logs regularly for security issues
    - Don't include sensitive data in error messages
 
@@ -209,32 +196,10 @@ The exported workflow JSON files (`newsFetchingWorkflow.json`, `profileFetchWork
 
 ---
 
-## 🔄 Credential Rotation Checklist
-
-### Monthly
-
-- [ ] Review n8n execution logs for errors
-- [ ] Check API provider dashboards for usage anomalies
-- [ ] Verify Discord webhook is still working
-
-### Quarterly
-
-- [ ] Rotate API keys (Groq, Google, etc.)
-- [ ] Regenerate NocoDB API token
-- [ ] Update Discord webhook if needed
-
-### Annually
-
-- [ ] Security audit of workflows
-- [ ] Review and update this security policy
-- [ ] Backup encrypted credentials securely
-
----
-
 ## 📚 Additional Resources
 
 - **n8n Security Docs**: https://docs.n8n.io/hosting/environment-variables/secure-credentials/
-- **NocoDB Security**: https://docs.nocodb.com/setup-and-usages/miscellaneous/#airtable-migration
+- **supabase Security Docs**: https://supabase.com/docs/guides/security/
 - **Groq API Security**: https://console.groq.com/docs/api-overview
 - **Google Gemini Security**: https://ai.google.dev/docs
 - **Discord Webhook Security**: https://discord.com/developers/docs/resources/webhook
@@ -252,17 +217,18 @@ If you discover a security vulnerability:
 
 ### Security Best Practices Summary
 
-| Practice                       | Why                          | How                          |
-| ------------------------------ | ---------------------------- | ---------------------------- |
-| Never commit `.env` files      | Prevents credential leakage  | Use `.gitignore`             |
-| Use n8n for credential storage | Credentials are encrypted    | Configure in n8n UI          |
-| Rotate credentials regularly   | Limits damage if compromised | Update credentials quarterly |
-| Monitor API usage              | Detect unauthorized access   | Check provider dashboards    |
-| Backup securely                | Disaster recovery            | Use encrypted backups        |
-| Review error logs              | Catch issues early           | Check `errors.csv` weekly    |
+| Practice                               | Why                          | How                          |
+| -------------------------------------- | ---------------------------- | ---------------------------- |
+| Never commit `.env` files              | Prevents credential leakage  | Use `.gitignore`             |
+| Use n8n for credential storage         | Credentials are encrypted    | Configure in n8n UI          |
+| Keep `SUPABASE_SECRET_KEY` server-side | Tables stay private via RLS  | `.env` + backend only        |
+| Rotate credentials regularly           | Limits damage if compromised | Update credentials quarterly |
+| Monitor API usage                      | Detect unauthorized access   | Check provider dashboards    |
+| Backup securely                        | Disaster recovery            | Use encrypted backups        |
+| Review error logs                      | Catch issues early           | Check workflow error logs    |
 
 ---
 
-**Last Updated**: June 2026  
-**Version**: 1.0  
+**Last Updated**: November 2026  
+**Version**: 1.1  
 **Maintainer**: iwaneth

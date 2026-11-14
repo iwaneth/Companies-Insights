@@ -1,4 +1,4 @@
-# Company Intelligence
+# Companies Insights
 
 ![Docker](https://img.shields.io/badge/docker-required-2496ED)
 
@@ -10,112 +10,57 @@
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688)
 
-A containerized full-stack enterprise intelligence platform that automatically collects, analyzes, and aggregates latest news and company profile data in real-time. Built with **Docker**, **n8n**, **NocoDB** (for the existing workflows), **Supabase** (for the FastAPI dashboard), and **FastAPI**.
+A containerized full-stack enterprise intelligence platform that automatically collects, analyzes, and aggregates company profile and news data. Built with **Docker**, **n8n** for workflow automation, **Supabase** for data storage, and a **FastAPI + Jinja2** dashboard.
 
 ## Overview
 
-Company Intelligence is designed to help you monitor and analyze company information seamlessly. The system runs two main automated workflows:
+Company Intelligence monitors companies and aggregates everything known about them into interactive dashboard cards:
 
-- **News Fetching Workflow**: Continuously collects the latest news related to your companies
-- **Profile Fetching Workflow**: Gathers and updates company profile data including industry, competitors, key products, and tags
+- **News Fetching**: n8n workflows continuously collect the latest news for tracked companies
+- **Constant and Dynamic Attributes/Properties**: n8n workflows that fetches deep information and refreshes when informations change
+- **Profile Fetching**: generates a profile from data provided (profile, competitores, tags)
+- **Dashboard**: a FastAPI-rendered page groups profiles, constant and dynamic properties, and news into one card per company, with search, light/dark themes, hover article previews, and a details modal
 
-With robust error handling, multi-model AI fallback support, and containerized deployment, this platform can run anywhere Docker is available.
-
-## Screenshots
-
-### Profile Data
-
-**n8n Workflow**
-
-![Profile Workflow](demos/profile_workflow_demo.png)
-
-**NocoDB Table**
-
-![Profile Table](demos/profile_table_demo.png)
-
-### News Data
-
-**n8n Workflow**
-
-![News Workflow](demos/news_workflow_demo.png)
-
-**NocoDB Table**
-
-![News Table](demos/news_table_demo.png)
-
-### Data Cleanup Workflows
-
-![Profile Old Data Cleaning](demos/profile_old_data_cleaning_demo.png)
-
-![News Old Data Cleaning](demos/news_old_data_cleaning_demo.png)
-
-### Error Logging
-
-![Errors Table](demos/errors_table_demo.png)
+With robust error handling, multi-model AI fallback support, and containerized deployment, the platform runs anywhere Docker is available.
 
 ## Key Features
 
-- **Automated Workflows**: n8n-powered workflows for continuous data collection and analysis
-- **Multi-AI Model Support**: Built-in fallback nodes for multiple AI model API keys (3+ models supported)
-- **Robust Error Handling**: Comprehensive error logging and tracking with CSV error reports
-- **Real-Time Data Aggregation**: Centralized data management with NocoDB
-- **Docker Containerized**: Run the entire stack with a single `docker-compose` command
-- **Scalable Architecture**: Ready for expansion with FastAPI backend and frontend dashboard
-
-## Architecture
-
-```
-Company Intelligence Platform
-├── n8n (Workflow Orchestration)
-|   ├── Clearing Old News Data Workflow
-│   ├── News Fetching Workflow
-│   ├── Clearing Old Profile Data Workflow
-|   └── Profile Fetching Workflow
-├── NocoDB (Database & UI)
-│   └── Centralized Data Storage
-|      ├── News Table
-|      ├── Profile Table
-|      └── Errors Table
-├── FastAPI Backend (Server Side)
-|   ├── Supabase Client For Fetching Data
-│   └── FastAPI app: Processing/Displaying
-└── Frontend Dashboard (User Interface)
-    └── Interactive Data Visualization
-```
+- **Automated Workflows**: n8n-powered pipelines for continuous data collection (definitions in `n8n-workflows/`)
+- **Multi-AI Model Support**: built-in fallback nodes for multiple AI model API keys
+- **Company Dashboard**: one card per company with news previews, client-side search, and a floating details modal
+- **Light / Dark Themes**: VS Code-style dark theme, persisted across pages
+- **Robust Error Handling**: error logging and tracking from the automation layer
+- **Docker Containerized**: run the automation stack with a single `docker-compose` command
+- **Secure Backend**: Supabase tables are private; FastAPI fetches data server-side only
 
 ### Data Collected
 
-**Company Profiles**:
+**Constant records** (`companies` table):
 
-- Company name
-- Industry
-- Website
-- Profile information
-- Competitors
-- Tags
-- Key Products
+- Company name, industry
+- Founded, website, headquarters, country
+- Stock symbol / exchange, parent company, subsidiaries
 
-**Company News**:
+**Dynamic properties** (`halfDynamicProperties` table):
 
-- Latest news articles
-- Timestamps
-- Sources
-- Analysis & insights
+- Revenue, employees, key products, CEO, net income, market cap
 
-**Error Tracking**:
+**Profiles** (`companyProfile` table):
 
-- Failed data fetches
-- Processing errors
-- API failures
+- Profile text, competitors, tags
+
+**News** (`companyNews` table):
+
+- Article title, publication date, full article text
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Docker & Docker Compose** - [Install Docker Desktop](https://docs.docker.com/get-docker/) (includes Compose, works on Windows/macOS/Linux)
-- **Python 3.10+** - [Install from python.org](https://www.python.org/downloads/) (needed to run the FastAPI backend outside Docker)
-- API Keys for AI models (OpenAI, Gemini, Groq, etc.)
-- Supabase project URL and key for the FastAPI dashboard
+- **Docker & Docker Compose** — [Install Docker](https://docs.docker.com/get-docker/) (for the n8n automation stack)
+- **Python 3.10+** — [Install from python.org](https://www.python.org/downloads/) (to run the FastAPI backend locally)
+- API Keys for AI models (OpenAI, Gemini, Groq, etc.) — used by the n8n workflows
+- A Supabase project URL and secret key for the dashboard
 
 ### Installation
 
@@ -123,7 +68,7 @@ Company Intelligence Platform
 
    ```bash
    git clone https://github.com/iwaneth/CompanyIntelligence.git
-   cd CompanyIntelligence
+   cd CompaniesInsights
    ```
 
 2. **Set up environment variables**:
@@ -132,20 +77,11 @@ Company Intelligence Platform
    cp .env.example .env
    ```
 
-3. **Configure your API keys in `.env`**:
-
-   ```env
-   # Example configuration:
-   openAi > Gemini > groq
-
-   # FastAPI server-side database configuration
-   SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_SECRET_KEY=your-server-only-supabase-secret-key
-   ```
+3. **Configure `.env`**:
 
    The secret key is only for the FastAPI backend. Never put it in frontend code or expose it to browsers.
 
-4. **Start the platform**:
+4. **Start the automation stack**:
 
    ```bash
    docker-compose up -d
@@ -153,47 +89,33 @@ Company Intelligence Platform
 
 5. **Access the services**:
    - **n8n Workflows**: http://localhost:5678
-   - **NocoDB Database**: http://localhost:8080
+   - **Dashboard**: http://127.0.0.1:8000/dashboard (after starting the backend, see below)
 
 ### Post-Setup Configuration
 
 #### Configure n8n Workflows
 
 1. Access n8n at `http://localhost:5678`
-2. Import workflows from workflow.example/ in the repository:
-   - `newsFetchingWorkflow.json` - For automated news collection
-   - `profileFetchWorkflow.json` - For automated profile data refresh
-   - `clearingNewsOldData.json` - For erasing old news data
-   - `clearingProfileOldData.json` - For erasing old Profile Data
+2. Import the workflow definitions from `n8n-workflows/`:
+   - `companyNews.json` — news collection
+   - `companyProfile.json` — profile data refresh
+   - `companies.json`, `companyH.json`, `addNewCompany.json`, `backToPending.json` — company management
+   - `scheduleRefresher.json` — scheduled refresh / cleanup
+3. In each workflow, configure the AI model nodes with your API keys and set up the required credentials (AI providers, Supabase, Discord webhook — optional)
 
-3. Configuration:
+#### Database Setup (Supabase)
 
-- In fetching workflows:
+Before using the dashboard, run `supabase/migrations/20261026221500_private_backend_company_data.sql` in the Supabase SQL Editor. It enables Row Level Security on the four company tables, revokes direct table access from `public`, `anon`, and `authenticated`, and grants table reads to the backend's `service_role`. The SQL files in `test-db/` are example seed statements and must be run separately if those sample rows have not already been imported.
 
-* configure the AI model nodes with your API keys:
-* Set primary AI model credentials
-* Configure fallback nodes with alternative API keys for resilience
-
-- For all workflows:
-
-* Link NocoDB credentials for data persistence
-* Link discord webhook token for getting notification on failures (optional, if you don't want to link it you have to remove the discord nodes before)
-
-#### Connect NocoDB
-
-1. Access NocoDB at `http://localhost:8080`
-2. Import tables from workflow.example/ in the repository:
-
-- `profile and news - lastNews.csv`
-- `profile and news - profile.csv`
-- `profile and news - errors.csv`
-
-3. Generate and copy your NocoDB API token
-4. Add to n8n workflows for data persistence
+The dashboard reads `companies`, `halfDynamicProperties`, `companyProfile`, and `companyNews`, joining child rows to company cards by `company_id`.
 
 #### Back-end Starter
 
+The backend can be started either by disabling the ["dev"] flag in profiles in docker-compose.yml, so docker compose starts it with the n8n container and handle all dependencies and virtual envirnment in the background, Or it can be started individually for devlopment purposes following these steps:
+
 The Python interpreter selected on your computer is separate from the Python 3.12 runtime in Docker. To run the backend locally, create a project virtual environment and install dependencies once:
+
+In the project directory, run:
 
 ```bash
 python3 -m venv .venv
@@ -205,17 +127,13 @@ On Windows PowerShell, activate it with `.venv\Scripts\Activate.ps1`.
 
 Create `.env` from `.env.example` and set your Supabase project URL and a server-only Supabase secret key. Keep it private: do not commit `.env`, add the key to frontend code, or expose it to browsers. If `.env` currently contains `SUPABASE_KEY`, replace that variable with `SUPABASE_SECRET_KEY` using the secret key from Supabase's API settings.
 
-Before using the dashboard, run `supabase/migrations/20261026221500_private_backend_company_data.sql` in the Supabase SQL Editor. It enables Row Level Security on the four company tables, revokes direct table access from `public`, `anon`, and `authenticated`, and grants table reads to the backend's `service_role`. The SQL files in `test-db/` are example seed statements and must be run separately if those sample rows have not already been imported.
-
-The dashboard reads `companies`, `halfDynamicProperties`, `companyProfile`, and `companyNews`, joining child rows to company cards by `company_id`. It fetches up to 100 rows from each table.
-
 Run the API from the repository root:
 
 ```bash
 python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
 
-Then open http://127.0.0.1:8000/dashboard. The website is public; FastAPI fetches the data server-side. This protects the Supabase tables from direct anonymous Supabase API queries, but data displayed on a public page can still be viewed and copied by visitors. No app container is needed for local backend development.
+Then open http://127.0.0.1:8000/dashboard. The website is public; FastAPI fetches the data server-side. This protects the Supabase tables from direct anonymous Supabase API queries, but data displayed on a public page can still be viewed and copied by visitors.( THIS steps uf u kept the `app` service in `docker-compose.yml` is disabled via a profile).
 
 Run the backend tests without Docker:
 
@@ -223,80 +141,87 @@ Run the backend tests without Docker:
 PYTHONPATH=backend python -m pytest backend/
 ```
 
-The n8n workflows remain configured for NocoDB; switching those workflows to Supabase is a separate migration.
+> **Note:** earlier versions of this project used NocoDB as the database and an `app.py`/`nocodb_client.py` backend. Those have been replaced by the Supabase + FastAPI dashboard described above.
 
 ## Project Structure
 
 ```
-CompanyIntelligence/
-├── demos/
-|   └── ...                             # demo screenshots
-├── static/
-|  ├── styles4.css                      # css styles conf
-|  └── walhaven-vqd8j8.jpg              # example wallpaper
-├── templates/
-|   └── HomePage.html                   # html displaying page
-├── workflow.example/
-|  ├── clearingNewsOldData.json         # n8n workflow for news old data erasing
-|  ├── newsFetchingWorkflow.json        # n8n workflow for news collection
-|  ├── clearingProfileOldData.json      # n8n workflow for profile old data erasing
-|  ├── profileFetchWorkflow.json        # n8n workflow for profile refreshing
-|  ├── profile and news - profile.csv   # Sample profile data
-|  ├── profile and news - lastNews.csv  # Sample news data
-|  └── profile and news - errors.csv    # Errors logs
-├── .env.example                        # environment variables
-├── .gitignore                          # Git ignore rules
-├── README.md                           # This file
-├── app.py                              # FastAPI app
-├── CONTRIBUTING.md                     # This file
-├── docker-compose.yml                  # Docker services configuration
-├── LICENSE                             # permissions
-├── nocodb_client.py                    # NocoDB client
-├── requirements.txt                    # This file
-├── SECURITY.md                         # This file
-└── test_app.py                         # Testing FastAPI server
+companiesInsights/
+├── backend/
+│   ├── main.py                  # FastAPI app, mounts static/scripts, routers
+│   ├── config.py                # backend configuration
+│   ├── db_client.py             # Supabase fetch client
+│   ├── routers/
+│   │   ├── dashboard.py         # /dashboard — groups tables into company cards
+│   │   ├── home.py              # /home — currently a "temporarily disabled" page
+│   │   └── features.py          # /features — settings placeholder
+│   ├── test_app.py
+│   └── test_db_client.py
+├── frontend/
+│   ├── templates/
+│   │   ├── dashboard.html       # company cards, theme switcher, modals
+│   │   ├── home.html
+│   │   ├── features.html
+│   │   └── status.html
+│   ├── static/
+│   │   ├── theme.css            # shared light/dark palette (edit dark colors here)
+│   │   ├── dashboard.css
+│   │   ├── home.css
+│   │   ├── features.css
+│   │   └── status.css
+│   └── scripts/
+│       ├── theme.js             # applies saved theme before first paint
+│       └── dashboard.js         # search, theme switcher, news/company modals
+├── n8n-workflows/               # n8n workflow definitions (JSON)
+├── n8n_data/                    # n8n runtime data (git-ignored)
+├── supabase/
+│   └── migrations/              # RLS migration for the four company tables
+├── test-db/                     # example seed SQL (git-ignored)
+├── docker-compose.yml           # n8n service (+ optional app profile)
+├── Dockerfile
+├── docker-starter.sh
+├── docker-stop.sh
+├── requirements.txt
+├── .env.example
+├── README.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── LICENSE
+└── tree.txt
 ```
 
 ## Configuration Details
 
+### Dashboard
+
+- **Theme**: light/dark toggle on the dashboard; choice is persisted in `localStorage` and shared by all pages. Dark palette lives in `frontend/static/theme.css` under `html.dark-theme`.
+- **Search**: client-side filter over each card's `data-search` attribute (company name, industry, news titles).
+- **Cards**: news snippets are clamped; hovering a news item shows the full article + publish date in an overlay; clicking a card opens a modal with all attributes, properties, profiles, and news.
+
 ### AI Model Fallback System
 
-The system supports up to 3+ AI model APIs with automatic fallback:
-
-1. **Primary Model**: Your main AI service (e.g., OpenAI)
-2. **Fallback Model 1**: Secondary service (e.g., Anthropic Claude)
-3. **Fallback Model 2**: Tertiary service (e.g., Groq, or others)
-
-If the primary model fails, the workflow automatically uses the fallback models to ensure continuous operation.
+The n8n workflows support multiple AI model APIs with automatic fallback. If the primary model fails, fallback models keep the pipelines running.
 
 ### Error Handling & Logging
 
-All errors are automatically logged to `profile and news - errors.csv` with:
-
-- Timestamp of error
-- Error type
-- Failed operation
-- Company/data affected
-- Suggested resolution
-
-Monitor this file to identify patterns and improve workflows.
+Workflow errors are logged for review (CSV error reports / n8n execution logs). Monitor these to identify patterns and improve workflows.
 
 ## Data Flow
 
 ```
-Companies List
+Companies List (Supabase)
     ↓
-n8n Workflows (News & Profile)
+n8n Workflows (News & Profile & Constant & Dynamic)
     ↓
-AI Models (with fallbacks)
+AI Models (with fallbacks) / Web Scrapping (with error handling)
     ↓
 Data Processing & Validation
     ↓
-NocoDB Database
+Supabase Database (RLS-protected)
     ↓
-FastAPI Backend (Server Side)
+FastAPI Backend (server-side fetch)
     ↓
-Frontend Dashboard (User Interface)
+Frontend Dashboard (Jinja2 + CSS/JS)
 ```
 
 ## Troubleshooting
@@ -305,19 +230,20 @@ Frontend Dashboard (User Interface)
 
 - Check n8n container logs: `docker logs n8n_local`
 - Verify all API keys are correctly configured
-- Ensure NocoDB token is valid and has proper permissions
+- Ensure required credentials exist in n8n
 
-### Data not appearing in NocoDB?
+### Dashboard shows no data?
 
-- Verify NocoDB service is running: `docker ps`
-- Check NocoDB connection credentials in n8n
-- Ensure database tables exist in NocoDB
+- Confirm `.env` has `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
+- Confirm the RLS migration has been applied in Supabase
+- Check the backend logs for Supabase fetch errors
+- The dashboard fetches up to 100 rows per table
 
 ### AI Model failures?
 
 - Check API key validity for all configured models
-- Monitor error logs in `profile and news - errors.csv`
-  -- Verify fallback nodes are properly configured with alternative API keys
+- Monitor error logs from the workflows
+- Verify fallback nodes are properly configured with alternative API keys
 
 ### Docker issues?
 
@@ -331,22 +257,20 @@ Frontend Dashboard (User Interface)
 
 - ✅ n8n workflow orchestration
 - ✅ Multi-model AI support with fallbacks
-- ✅ NocoDB database integration
+- ✅ Database integration
 - ✅ Error handling & logging
 
-### Phase 2 (Current)
+### Phase 2 (Done)
 
-- FastAPI backend development
-  - REST API endpoints for data access
-  - Data filtering and search capabilities
-  - Rate limiting and authentication
+- ✅ FastAPI backend
+  - Server-side Supabase access with RLS-protected tables
+  - Jinja2-rendered dashboard
 
-### Phase 3 (In Progress)
+### Phase 3 (Done)
 
-- Frontend Dashboard
-  - Real-time data visualization
-  - Interactive company monitoring
-  - News feed and alerts
+- ✅ Frontend dashboard
+  - Company cards with grouped news, attributes, and profiles
+  - Client-side search, light/dark themes, details modal
 
 ### Phase 4 (Future - v2)
 
@@ -358,26 +282,29 @@ Frontend Dashboard (User Interface)
 
 ## Contributing
 
-Contributions are welcom! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Dependencies
 
-- **Docker & Docker Compose**: Containerization
-- **n8n**: Workflow automation platform
-- **NocoDB**: Open-source database platform with UI
-- **FastAPI**: Modern Python web framework (backend)
-- **Multiple AI APIs**: OpenAI, Anthropic, Groq, etc.
+- **Docker & Docker Compose**: containerization (n8n)
+- **n8n**: workflow automation platform
+- **Supabase**: hosted Postgres database with RLS
+- **FastAPI**: modern Python web framework (backend)
+- **Jinja2**: server-side templating
+- **Multiple AI APIs**: OpenAI, Anthropic, Groq, Gemini, etc.
 
 ## Support
 
 For issues, questions, or suggestions:
 
 - Check the troubleshooting section above
-- Review error logs in CSV files
-- Check n8n and NocoDB documentation
+- Review error logs from the workflows
+- Check n8n and Supabase documentation
 
 ---
 
-**Started in 28/05/2026 and still goes in rate of 6 hours a day**
+**Started in 28/05/2026 and still goes in rate of 4 hours a day**
 
-Last Updated: July 2026
+**NOTE: STILL under development, some features needs further optimizations and cleaning especially n8n workflows.**
+
+Last Updated: November 2026

@@ -1,0 +1,50 @@
+Project structure (generated 2026-11-14):
+
+.
+├── backend
+│   ├── config.py
+│   ├── db_client.py
+│   ├── main.py
+│   ├── routers
+│   │   ├── dashboard.py
+│   │   ├── features.py
+│   │   └── home.py
+│   ├── test_app.py
+│   └── test_db_client.py
+├── CONTRIBUTING.md
+├── docker-compose.yml
+├── Dockerfile
+├── docker-starter.sh
+├── docker-stop.sh
+├── frontend
+│   ├── scripts
+│   │   ├── dashboard.js
+│   │   └── theme.js
+│   ├── static
+│   │   ├── dashboard.css
+│   │   ├── features.css
+│   │   ├── home.css
+│   │   ├── status.css
+│   │   └── theme.css
+│   └── templates
+│       ├── dashboard.html
+│       ├── features.html
+│       ├── home.html
+│       └── status.html
+├── LICENSE
+├── n8n_data
+│   └── (private)
+├── n8n-workflows
+│   ├── addNewCompany.json
+│   ├── backToPending.json
+│   ├── companies.json
+│   ├── companyH.json
+│   ├── companyNews.json
+│   ├── companyProfile.json
+│   └── scheduleRefresher.json
+├── README.md
+├── requirements.txt
+├── SECURITY.md
+└── tree.txt
+
+11 directories, 46 files

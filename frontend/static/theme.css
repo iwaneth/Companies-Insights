@@ -1,0 +1,53 @@
+/* ============================================================
+   Shared theme palette — loaded by every page BEFORE the page CSS.
+
+   DARK MODE: all dark colors live under `html.dark-theme` below.
+   `--bg` is the main page background (VS Code Dark+ editor grey,
+   #1e1e1e — change it here to whatever you prefer).
+   `--bg-secondary` = sidebar / inputs, `--bg-card` = cards,
+   `--bg-hover` = inner pills / hover fills, `--border` = outlines.
+   ============================================================ */
+
+:root {
+  --bg-gradient: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  --bg: #f3f4f6;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f3f4f6;
+  --border: #e5e7eb;
+  --border-strong: #cbd5e1;
+  --text: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --accent: #2563eb;
+  --accent-text: #2563eb;
+  --danger: #dc2626;
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-hover: 0 16px 36px rgba(15, 23, 42, 0.12);
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* VS Code "Dark+" inspired — dark grey, not pure black.
+   Main background is exactly #1E1E1E, main text #CCCCCC. */
+html.dark-theme {
+  color-scheme: dark; /* dark scrollbars & form controls */
+  --bg-gradient: #1e1e1e;
+  --bg: #1e1e1e;            /* ← main dark background */
+  --bg-secondary: #252526;  /* sidebar, search input */
+  --bg-card: #252526;       /* company cards */
+  --bg-hover: #2a2d2e;      /* news pills, hover fills */
+  --bg-active: #37373d;     /* stronger hover */
+  --border: #3c3c3c;
+  --border-strong: #454545;
+  --text: #cccccc;
+  --text-secondary: #9d9d9d;
+  --text-muted: #6e6e6e;
+  --accent: #007acc;
+  --accent-text: #3794ff;
+  --danger: #f87171;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 16px 36px rgba(0, 0, 0, 0.55);
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+  --modal-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}

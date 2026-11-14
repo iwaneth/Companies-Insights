@@ -1,4 +1,4 @@
-// ── Safe Initialization Helper ิ──
+// ── Safe Initialization Helper ──
 function initDashboard() {
   console.log("Dashboard JS initialized successfully!");
 
@@ -8,20 +8,31 @@ function initDashboard() {
     searchInput.addEventListener("input", (e) => {
       const q = e.target.value.toLowerCase();
       document.querySelectorAll(".company-card").forEach((card) => {
-        const text = card.textContent.toLowerCase();
+        const text = (card.dataset.search || "").toLowerCase();
         card.style.display = text.includes(q) ? "" : "none";
       });
     });
   }
 
-  // ── Theme Switcher ──
+  // ── Theme Switcher (light / dark, persisted) ──
   const html = document.documentElement;
   const radios = document.getElementsByName("themes");
 
+  // Reflect the saved theme in the switcher UI
+  const saved = localStorage.getItem("theme");
+  const isDark = saved ? saved === "dark" : html.classList.contains("dark-theme");
+  const checked = document.getElementById(isDark ? "dark-theme" : "light-theme");
+  if (checked) checked.checked = true;
+
   for (let i = 0; i < radios.length; i++) {
     radios[i].addEventListener("change", function () {
-      html.classList.remove("light-theme", "dark-theme", "black-theme");
-      html.classList.add(this.id);
+      html.classList.toggle("dark-theme", this.id === "dark-theme");
+      try {
+        localStorage.setItem(
+          "theme",
+          this.id === "dark-theme" ? "dark" : "light",
+        );
+      } catch (e) {}
       console.log("Theme switched to:", this.id);
     });
   }
@@ -51,7 +62,9 @@ function openNewsModal(el) {
   const modalDl = document.getElementById("modalDl");
 
   modalTitle.textContent = record.title || "News item";
-  modalMeta.textContent = record.pubDate ? `Date: ${formatPubDate(record.pubDate)}` : "";
+  modalMeta.textContent = record.pubDate
+    ? `Date: ${formatPubDate(record.pubDate)}`
+    : "";
   modalDl.replaceChildren();
 
   if (record.newsArticle) {
@@ -68,4 +81,22 @@ function openNewsModal(el) {
 function closeNewsModal(e) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById("newsModal").classList.remove("active");
+}
+
+// ── Company Modal (all attributes & properties) ──
+function openCompanyModal(card) {
+  const source = card.querySelector(".company-modal-source");
+  const body = document.getElementById("companyModalBody");
+  body.replaceChildren();
+  if (source) {
+    source.childNodes.forEach((node) => {
+      body.appendChild(node.cloneNode(true));
+    });
+  }
+  document.getElementById("companyModal").classList.add("active");
+}
+
+function closeCompanyModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById("companyModal").classList.remove("active");
 }

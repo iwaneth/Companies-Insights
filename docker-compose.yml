@@ -10,6 +10,8 @@ services:
       - "5678:5678"
     volumes:
       - ./n8n_data:/home/node/.n8n:Z
+      # Note: The volume is mounted with the 'Z' option to ensure proper SELinux context on systems that enforce it.
+      # Note: This volume is mounted to save n8n data in a custom folder instead of default docker container location. This allows for easier backup and management of n8n data.
     environment:
       - N8N_SECURE_COOKIE=false
       - NODE_FUNCTION_ALLOW_EXTERNAL=axios,lodash
@@ -26,6 +28,4 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app:z
-    depends_on:
-      - n8n
+      - .:/app:z # Note: The volume is mounted with the 'z' option to ensure proper SELinux context on systems that enforce it.

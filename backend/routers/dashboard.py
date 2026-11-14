@@ -1,5 +1,6 @@
 from pathlib import Path
 import asyncio
+import json
 from datetime import datetime
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
@@ -58,6 +59,23 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 templates = Jinja2Templates(directory=str(PROJECT_ROOT / "frontend" / "templates"))
 templates.env.filters["pubdate_fmt"] = pubdate_fmt
 templates.env.filters["format_date"] = format_date
+
+def csv_fmt(value):
+    """Render list-like values (real lists or JSON-array strings) as 'a, b, c'."""
+    if isinstance(value, str):
+        text = value.strip()
+        if text.startswith("["):
+            try:
+                value = json.loads(text)
+            except ValueError:
+                return text.strip("[]").replace('"', "").replace("'", "")
+        else:
+            return text
+    if isinstance(value, (list, tuple, set)):
+        return ", ".join(str(item) for item in value)
+    return value
+
+templates.env.filters["csv_fmt"] = csv_fmt
 
 def render(template_name: str, request: Request, context: dict = None):
     if context is None:
