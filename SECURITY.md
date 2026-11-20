@@ -20,12 +20,12 @@ Company Intelligence is designed with security best practices to protect your AP
 **Supabase Database:**
 
 - Company data lives in Supabase (hosted Postgres)
-- Row Level Security is enabled on all four company tables via `supabase/migrations/`
+- Row Level Security is enabled on all four company tables via [`supabase/migration-command.sql`](supabase/migration-command.sql)
 - Direct access from `public`, `anon`, and `authenticated` roles is revoked; only the backend's `service_role` can read the tables
 
 **FastAPI Backend:**
 
-- `SUPABASE_SECRET_KEY` lives only in `.env` on the server — it must never appear in frontend code, templates, or browser-visible responses
+- `SUPABASE_SECRET_KEY` belongs only in the backend environment (a local `.env` file or the hosting provider's secret settings) — it must never appear in frontend code, templates, or browser-visible responses
 - The dashboard is a public page: anyone can view the data it displays, but they cannot query Supabase directly
 
 **n8n Data Directory:**
@@ -175,13 +175,12 @@ The exported workflow JSON files in `n8n-workflows/` contain:
 - ✅ Error handling logic
 - ❌ NO API keys, tokens, or secrets
 
-**Safe to share:** You can safely share workflow files with others. They won't contain any secrets.
+**Before sharing:** Review exported workflow files for credentials or other sensitive values. Credential ID references alone are not credentials.
 
 ### Workflow Best Practices
 
 1. **Error Logging**
-   - See
-   - Review these logs regularly for security issues
+   - Review the logs regularly for security issues and remove sensitive values before sharing them
    - Don't include sensitive data in error messages
 
 2. **Data Validation**

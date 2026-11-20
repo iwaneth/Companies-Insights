@@ -1,4 +1,4 @@
-# Contributing to Companies Insightes
+# Contributing to Company Intelligence
 
 Contributions are welcome! Whether you have ideas for improvements, bug fixes, or want to help with the FastAPI backend, the n8n workflows, or frontend development, feel free to reach out.
 
@@ -21,9 +21,8 @@ python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 80
 # Tests
 PYTHONPATH=backend python -m pytest backend/
 
-# Automation stack
+# Optional local n8n automation stack (the Python app runs separately)
 docker-compose up -d   # n8n on http://localhost:5678
-                       # AND IF Dockerfile app was enabled in docker-compose.yml it will be accessible at: http://localhost:8000
 ```
 
 ### Conventions

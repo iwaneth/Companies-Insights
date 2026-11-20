@@ -1,6 +1,6 @@
-# Companies Insights
+# Company Intelligence
 
-![Docker](https://img.shields.io/badge/docker-required-2496ED)
+![Docker](https://img.shields.io/badge/docker-optional%20for%20local%20n8n-2496ED)
 
 ![n8n](https://img.shields.io/badge/n8n-automation-EA4B73)
 
@@ -10,18 +10,18 @@
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688)
 
-A containerized full-stack enterprise intelligence platform that automatically collects, analyzes, and aggregates company profile and news data. Built with **Docker**, **n8n** for workflow automation, **Supabase** for data storage, and a **FastAPI + Jinja2** dashboard.
+A company intelligence dashboard built with **FastAPI**, **Jinja2**, and **Supabase**, with optional **n8n** workflows for data collection. The Python dashboard runs independently; Docker is only needed to run the local n8n automation stack.
 
 ## Overview
 
 Company Intelligence monitors companies and aggregates everything known about them into interactive dashboard cards:
 
 - **News Fetching**: n8n workflows continuously collect the latest news for tracked companies
-- **Constant and Dynamic Attributes/Properties**: n8n workflows that fetches deep information and refreshes when informations change
-- **Profile Fetching**: generates a profile from data provided (profile, competitores, tags)
+- **Constant and Dynamic Attributes/Properties**: n8n workflows that fetch detailed company information and refresh it when it changes
+- **Profile Fetching**: generates profiles from company data, including competitors and tags
 - **Dashboard**: a FastAPI-rendered page groups profiles, constant and dynamic properties, and news into one card per company, with search, light/dark themes, hover article previews, and a details modal
 
-With robust error handling, multi-model AI fallback support, and containerized deployment, the platform runs anywhere Docker is available.
+The dashboard can run as a standalone Python web service. The optional n8n automation stack runs in Docker.
 
 ## Key Features
 
@@ -30,7 +30,7 @@ With robust error handling, multi-model AI fallback support, and containerized d
 - **Company Dashboard**: one card per company with news previews, client-side search, and a floating details modal
 - **Light / Dark Themes**: VS Code-style dark theme, persisted across pages
 - **Robust Error Handling**: error logging and tracking from the automation layer
-- **Docker Containerized**: run the automation stack with a single `docker-compose` command
+- **Optional n8n automation**: run the workflow stack locally with Docker Compose
 - **Secure Backend**: Supabase tables are private; FastAPI fetches data server-side only
 
 ### Data Collected
@@ -57,8 +57,8 @@ With robust error handling, multi-model AI fallback support, and containerized d
 
 ### Prerequisites
 
-- **Docker & Docker Compose** — [Install Docker](https://docs.docker.com/get-docker/) (for the n8n automation stack)
-- **Python 3.10+** — [Install from python.org](https://www.python.org/downloads/) (to run the FastAPI backend locally)
+- **Python 3.10+** — [Install from python.org](https://www.python.org/downloads/) (for the dashboard)
+- **Docker & Docker Compose** — [Install Docker](https://docs.docker.com/get-docker/) (only if you want to run n8n locally)
 - API Keys for AI models (OpenAI, Gemini, Groq, etc.) — used by the n8n workflows
 - A Supabase project URL and secret key for the dashboard
 
@@ -68,7 +68,7 @@ With robust error handling, multi-model AI fallback support, and containerized d
 
    ```bash
    git clone https://github.com/iwaneth/CompanyIntelligence.git
-   cd CompaniesInsights
+   cd CompanyIntelligence
    ```
 
 2. **Set up environment variables**:
@@ -79,17 +79,17 @@ With robust error handling, multi-model AI fallback support, and containerized d
 
 3. **Configure `.env`**:
 
-   The secret key is only for the FastAPI backend. Never put it in frontend code or expose it to browsers.
+   The dashboard's `SUPABASE_SECRET_KEY` belongs in the FastAPI server environment only. Never put it in frontend code or expose it to browsers. Configure n8n credentials separately if your workflows connect to Supabase.
 
-4. **Start the automation stack**:
+4. **Start the dashboard** by following [Back-end Starter](#back-end-starter) below.
+
+5. **Optionally start n8n locally** if you want to run the automation workflows:
 
    ```bash
    docker-compose up -d
    ```
 
-5. **Access the services**:
-   - **n8n Workflows**: http://localhost:5678
-   - **Dashboard**: http://127.0.0.1:8000/dashboard (after starting the backend, see below)
+   n8n is available at http://localhost:5678. The Python dashboard runs separately at http://127.0.0.1:8000/dashboard.
 
 ### Post-Setup Configuration
 
@@ -105,15 +105,13 @@ With robust error handling, multi-model AI fallback support, and containerized d
 
 #### Database Setup (Supabase)
 
-Before using the dashboard, run `supabase/migrations/20261026221500_private_backend_company_data.sql` in the Supabase SQL Editor. It enables Row Level Security on the four company tables, revokes direct table access from `public`, `anon`, and `authenticated`, and grants table reads to the backend's `service_role`. The SQL files in `test-db/` are example seed statements and must be run separately if those sample rows have not already been imported.
+Before using the dashboard, run [`supabase/migration-command.sql`](supabase/migration-command.sql) in the Supabase SQL Editor. It enables Row Level Security on the four company tables, revokes direct table access from `public`, `anon`, and `authenticated`, and grants table reads to the backend's `service_role`. The SQL files in `test-db/` are example seed statements and must be run separately if those sample rows have not already been imported.
 
-The dashboard reads `companies`, `halfDynamicProperties`, `companyProfile`, and `companyNews`, joining child rows to company cards by `company_id`.
+The dashboard reads `companies`, `halfDynamicProperties`, `companyProfile`, and `companyNews`, joining child rows to company cards by `company_id`. The 13 currently tracked companies are read from Supabase; the dashboard does not require n8n to run.
 
 #### Back-end Starter
 
-The backend can be started either by disabling the ["dev"] flag in profiles in docker-compose.yml, so docker compose starts it with the n8n container and handle all dependencies and virtual envirnment in the background, Or it can be started individually for devlopment purposes following these steps:
-
-The Python interpreter selected on your computer is separate from the Python 3.12 runtime in Docker. To run the backend locally, create a project virtual environment and install dependencies once:
+The FastAPI dashboard runs independently from n8n and does not require Docker. To run it locally, create a project virtual environment and install dependencies once:
 
 In the project directory, run:
 
@@ -133,7 +131,15 @@ Run the API from the repository root:
 python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
 
-Then open http://127.0.0.1:8000/dashboard. The website is public; FastAPI fetches the data server-side. This protects the Supabase tables from direct anonymous Supabase API queries, but data displayed on a public page can still be viewed and copied by visitors.( THIS steps uf u kept the `app` service in `docker-compose.yml` is disabled via a profile).
+Then open http://127.0.0.1:8000/dashboard. The dashboard fetches data from Supabase on the server. If you deploy it publicly, visitors can view and copy any data displayed on the page.
+
+To deploy only the Python dashboard on Render, create a **Web Service** from this repository and use the following settings:
+
+- **Root Directory:** leave blank
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `uvicorn main:app --app-dir backend --host 0.0.0.0 --port $PORT`
+
+Add `SUPABASE_URL` and `SUPABASE_SECRET_KEY` under the Render service environment variables. This runs the Python app as a native Python service; it does not start the n8n Docker container. Keep the Supabase secret key private and never add it to frontend code.
 
 Run the backend tests without Docker:
 
@@ -175,9 +181,9 @@ companiesInsights/
 ├── n8n-workflows/               # n8n workflow definitions (JSON)
 ├── n8n_data/                    # n8n runtime data (git-ignored)
 ├── supabase/
-│   └── migrations/              # RLS migration for the four company tables
+│   └── migration-command.sql   # RLS migration for the four company tables
 ├── test-db/                     # example seed SQL (git-ignored)
-├── docker-compose.yml           # n8n service (+ optional app profile)
+├── docker-compose.yml           # optional local n8n service
 ├── Dockerfile
 ├── docker-starter.sh
 ├── docker-stop.sh
@@ -209,13 +215,9 @@ Workflow errors are logged for review (CSV error reports / n8n execution logs). 
 ## Data Flow
 
 ```
-Companies List (Supabase)
+Optional n8n Workflows (News & Company Data)
     ↓
-n8n Workflows (News & Profile & Constant & Dynamic)
-    ↓
-AI Models (with fallbacks) / Web Scrapping (with error handling)
-    ↓
-Data Processing & Validation
+AI Models / Data Processing
     ↓
 Supabase Database (RLS-protected)
     ↓
@@ -234,10 +236,10 @@ Frontend Dashboard (Jinja2 + CSS/JS)
 
 ### Dashboard shows no data?
 
-- Confirm `.env` has `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
+- Confirm the environment has `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (local `.env` or hosting-provider settings)
 - Confirm the RLS migration has been applied in Supabase
 - Check the backend logs for Supabase fetch errors
-- The dashboard fetches up to 100 rows per table
+- The dashboard currently fetches up to 100 rows per table
 
 ### AI Model failures?
 
@@ -305,6 +307,6 @@ For issues, questions, or suggestions:
 
 **Started in 28/05/2026 and still goes in rate of 4 hours a day**
 
-**NOTE: STILL under development, some features needs further optimizations and cleaning especially n8n workflows.**
+**Note:** The n8n workflows may need further optimization and cleanup.
 
 Last Updated: November 2026
