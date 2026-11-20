@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
     <link rel="stylesheet" href="/static/theme.css?v=4" />
-    <link rel="stylesheet" href="/static/dashboard.css?v=4" />
+    <link rel="stylesheet" href="/static/dashboard.css?v=7" />
     <script src="/scripts/theme.js?v=4"></script>
     <script src="/scripts/dashboard.js?v=4"></script>
     {% macro fields(record) %}
@@ -129,8 +129,11 @@
                 {% for article in company.news %}
                 <div
                   class="news-preview-card"
-                  onclick="event.stopPropagation(); openNewsModal(this)"
-                  data-record="{{ article | tojson }}"
+                  onclick="
+                    event.stopPropagation();
+                    openNewsModal(this);
+                  "
+                  data-record="{{ article | tojson | forceescape }}"
                 >
                   <h4>{{ article.title or "News item" }}</h4>
                   <p class="news-article">{{ article.newsArticle or "" }}</p>
@@ -144,6 +147,21 @@
                 </div>
                 {% endfor %}
               </div>
+              {% else %}
+              <div class="company-no-news">
+                <p class="no-news-label">No recent news</p>
+                {% if company.profiles|length and company.profiles[0].profile %}
+                <p class="company-profile-preview">{{ company.profiles[0].profile }}</p>
+                {% elif company.properties|length %}
+                <div class="company-property-preview">
+                  {% for key, value in company.properties[0].items() if value and key in ["revenue", "employees", "ceo", "marketCap"] %}
+                  <span><strong>{{ humanize_field(key) }}:</strong> {{ value | csv_fmt }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <p class="company-profile-preview">Open this card to view company details.</p>
+                {% endif %}
+              </div>
               {% endif %}
             </div>
 
@@ -154,14 +172,10 @@
               </h3>
               {% if company.industry %}
               <p class="modal-meta">{{ company.industry }}</p>
-              {% endif %}
-
-              {% if company.details %}
+              {% endif %} {% if company.details %}
               <h3>Overview</h3>
-              {{ fields(company.details) }}
-              {% endif %}
-
-              {% if company.properties|length %}
+              {{ fields(company.details) }} {% endif %} {% if
+              company.properties|length %}
               <h3>Attributes</h3>
               {% for prop in company.properties %} {{ fields(prop) }} {% endfor
               %} {% endif %} {% if company.profiles|length %}
@@ -185,9 +199,7 @@
                   {% endif %} {% if profile.tags %}
                   <div>
                     <div class="field-label">Tags</div>
-                    <div class="field-value">
-                      {{ profile.tags | csv_fmt }}
-                    </div>
+                    <div class="field-value">{{ profile.tags | csv_fmt }}</div>
                   </div>
                   {% endif %}
                 </div>
@@ -202,14 +214,25 @@
                 {% endif %}
                 <p>{{ article.newsArticle or "" }}</p>
               </div>
-              {% endfor %}
-              {% endif %}
+              {% endfor %} {% endif %}
             </div>
           </article>
           {% else %}
           <p class="empty-state">No companies are visible.</p>
           {% endfor %}
         </section>
+        <footer class="site-footer">
+          &copy; 2026 Iwaneth · Companies Insights ·
+          <a href="https://github.com/iwaneth" target="_blank">GitHub</a>
+          <a
+            href="https://www.linkedin.com/in/iwane-tahraoui-b73318408/"
+            target="_blank"
+            >LinkedIn</a
+          >
+          <a href="https://www.instagram.com/th_i42_/?hl=en" target="_blank"
+            >Instagram</a
+          >
+        </footer>
       </main>
     </div>
 

@@ -518,3 +518,47 @@ body {
     padding: 24px;
   }
 }
+.site-footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+.company-no-news {
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.no-news-label {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.company-profile-preview {
+  display: -webkit-box;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.company-property-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
