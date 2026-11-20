@@ -1,7 +1,8 @@
+import asyncio
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -10,6 +11,7 @@ PROJECT_ROOT = BACKEND_DIR.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from db_client import fetch_table
 from routers import dashboard, features, home
 
 app = FastAPI(debug=False)
@@ -34,6 +36,21 @@ app.include_router(features.router)
 @app.get("/")
 async def root():
     return RedirectResponse(url="/dashboard")
+
+
+@app.get("/health")
+@app.get("/healthGG")
+async def health():
+    """Report healthy only when the API and its Supabase dependency respond."""
+    try:
+        await asyncio.wait_for(fetch_table("companies", limit=1), timeout=5)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"status": "unhealthy", "database": "unavailable"},
+        ) from exc
+
+    return {"status": "ok", "database": "ok"}
 
 
 @app.get("/status")
